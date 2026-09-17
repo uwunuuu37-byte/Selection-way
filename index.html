@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Selection Way — Batches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ══════════════════ TOKENS ══════════════════ */
+  :root{
+    --ink:#12131c;
+    --ink-2:#1c1e2b;
+    --navy:#132a4d;
+    --navy-2:#1d3b66;
+    --ink-soft:#5a5d78;
+    --paper:#faf8f3;
+    --paper-card:#ffffff;
+    --line:#eae6da;
+    --line-soft:#f1eee5;
+    --amber:#d4841f;
+    --amber-deep:#a8630f;
+    --amber-glow:rgba(212,132,31,.16);
+    --brick:#dc4c3e;
+    --brick-soft:rgba(220,76,62,.1);
+    --green:#2f9e5c;
+    --green-soft:rgba(47,158,92,.1);
+    --muted:#8b8878;
+    --surface:#ffffff;
+    --topbar-bg:rgba(250,248,243,.82);
+    --skeleton-hi:#f4f1e8;
+    --line-hover:#ddd5c0;
+    --r-xs:8px;
+    --r-s:12px;
+    --r-m:16px;
+    --r-l:22px;
+    --r-full:999px;
+    --shadow-1: 0 1px 2px rgba(18,19,28,.04), 0 1px 1px rgba(18,19,28,.03);
+    --shadow-2: 0 4px 16px -4px rgba(18,19,28,.10), 0 2px 6px -2px rgba(18,19,28,.06);
+    --shadow-3: 0 20px 60px -12px rgba(18,19,28,.32);
+    --ease: cubic-bezier(.22,1,.36,1);
+    --ease-out: cubic-bezier(.16,1,.3,1);
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:var(--font-body);
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    letter-spacing:-.005em;
+  }
+  a{text-decoration:none;color:inherit;}
+  button{cursor:pointer;border:none;outline:none;font-family:inherit;background:none;color:inherit;-webkit-tap-highlight-color:transparent;}
+  button:focus-visible, a:focus-visible, input:focus-visible{outline:2px solid var(--amber-deep);outline-offset:2px;border-radius:4px;}
+  img{display:block;max-width:100%;}
+  input{font-family:inherit;outline:none;border:none;background:none;color:inherit;}
+  ::selection{background:var(--amber);color:#fff;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important;} }
+
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes spin{ to{transform:rotate(360deg);} }
+  @keyframes pulseDot{ 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.4;transform:scale(.82);} }
+  @keyframes scaleIn{ from{opacity:0;transform:scale(.94);} to{opacity:1;transform:scale(1);} }
+  @keyframes shimmer{ 0%{background-position:150% 0;} 100%{background-position:-50% 0;} }
+  @keyframes slideUpSheet{ from{transform:translateY(100%);} to{transform:translateY(0);} }
+  .enter{ animation:fadeUp .45s var(--ease-out) both; }
+  .enter-fast{ animation:fadeUp .3s var(--ease-out) both; }
+
+  .page{display:none;}
+  .page.active{display:block;animation:fadeIn .25s var(--ease-out) both;}
+
+  /* ══════════════════ HEADER ══════════════════ */
+  .topbar{
+    position:sticky; top:0; z-index:100;
+    background:var(--topbar-bg);
+    backdrop-filter:blur(16px) saturate(1.4);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    border-bottom:1px solid var(--line);
+    transition:border-color .2s var(--ease);
+  }
+  .topbar-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    height:62px; padding:0 20px; max-width:760px; margin:0 auto;
+    gap:12px;
+  }
+  .brand{ display:flex; align-items:center; gap:11px; }
+  .brand-mark{
+    width:32px; height:32px; border-radius:9px;
+    background:var(--navy);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--amber); font-family:var(--font-display); font-weight:700; font-size:1.05rem;
+    flex-shrink:0;
+    box-shadow:0 2px 8px -2px rgba(18,19,28,.35);
+  }
+  .brand-name{ font-family:var(--font-display); font-weight:600; font-size:1.08rem; letter-spacing:-.01em; }
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft); transition:background .18s var(--ease), color .18s var(--ease), transform .12s var(--ease);
+    flex-shrink:0;
+  }
+  .icon-btn:hover{ background:rgba(18,19,28,.055); color:var(--ink); }
+  .icon-btn:active{ transform:scale(.9); }
+  .search-row{ display:flex; align-items:center; gap:8px; width:100%; animation:fadeUp .22s var(--ease-out) both; }
+  .search-input{
+    flex:1; background:var(--line-soft); border:1.5px solid transparent; border-radius:var(--r-full);
+    padding:10px 18px; font-size:.92rem; color:var(--ink);
+    transition:border-color .18s var(--ease), background .18s var(--ease);
+  }
+  .search-input:focus{ border-color:var(--amber); background:var(--surface); }
+  .search-input::placeholder{ color:var(--muted); }
+  .back-link{
+    display:flex; align-items:center; gap:5px;
+    font-size:.86rem; font-weight:600; color:var(--ink-soft);
+    padding:6px 10px 6px 6px; margin-left:-6px; border-radius:var(--r-full);
+    transition:color .15s var(--ease), background .15s var(--ease);
+    flex-shrink:0;
+  }
+  .back-link:hover{ color:var(--ink); background:rgba(18,19,28,.05); }
+  .back-link svg{ transition:transform .2s var(--ease-spring); }
+  .back-link:hover svg{ transform:translateX(-2px); }
+  .batch-header-title{
+    font-size:.82rem; font-weight:600; color:var(--muted);
+    max-width:52%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    opacity:0; animation:fadeIn .3s var(--ease) .1s both;
+  }
+
+  /* ══════════════════ HERO (home) ══════════════════ */
+  .hero{
+    max-width:760px; margin:0 auto; padding:46px 20px 6px;
+    position:relative;
+  }
+  .hero-eyebrow{
+    font-family:var(--font-display); font-style:italic; font-weight:500;
+    color:var(--amber-deep); font-size:.98rem; margin-bottom:8px;
+    animation:fadeUp .5s var(--ease-out) both;
+  }
+  .hero-title{
+    font-family:var(--font-display); font-weight:600;
+    font-size:clamp(2.1rem, 7vw, 3rem); line-height:1.06;
+    color:var(--ink); max-width:15ch; letter-spacing:-.01em;
+    animation:fadeUp .5s var(--ease-out) .04s both;
+  }
+  .hero-sub{
+    margin-top:14px; font-size:.98rem; color:var(--ink-soft); max-width:42ch; line-height:1.55;
+    animation:fadeUp .5s var(--ease-out) .08s both;
+  }
+  .hero-stats{
+    display:flex; gap:0; margin-top:30px;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    animation:fadeUp .5s var(--ease-out) .12s both;
+  }
+  .hero-stat{
+    flex:1; padding:16px 4px; text-align:left;
+    border-right:1px solid var(--line);
+    position:relative;
+  }
+  .hero-stat:last-child{ border-right:none; }
+  .hero-stat-num{
+    font-family:var(--font-display); font-size:1.65rem; font-weight:600; color:var(--ink);
+    font-variant-numeric:tabular-nums; display:block;
+  }
+  .hero-stat-label{ font-size:.73rem; color:var(--muted); margin-top:3px; }
+
+  /* ══════════════════ HERO QUIZ WIDGET ══════════════════ */
+  .quiz-widget{
+    margin-top:26px; background:linear-gradient(155deg, var(--surface) 0%, var(--amber-glow) 140%);
+    border:1.5px solid var(--line); border-radius:var(--r-l); padding:18px 18px 20px;
+    box-shadow:var(--shadow-1);
+    animation:fadeUp .5s var(--ease-out) .16s both;
+  }
+  .quiz-widget-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:15px; }
+  .quiz-widget-title{ display:flex; align-items:center; gap:11px; min-width:0; }
+  .quiz-widget-icon{
+    width:38px; height:38px; border-radius:11px; background:var(--navy);
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;
+  }
+  .quiz-widget-heading{ font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--ink); letter-spacing:-.005em; }
+  .quiz-widget-sub{ font-size:.75rem; color:var(--ink-soft); margin-top:1px; }
+  .quiz-streak-badge{
+    flex-shrink:0; font-size:.79rem; font-weight:700; color:var(--amber-deep);
+    background:var(--surface); border:1px solid var(--line); padding:6px 12px; border-radius:var(--r-full);
+    font-variant-numeric:tabular-nums;
+  }
+  .quiz-question{ font-size:.92rem; font-weight:600; color:var(--ink); line-height:1.42; margin-bottom:13px; }
+  .quiz-options{ display:flex; flex-direction:column; gap:8px; }
+  .quiz-opt{
+    display:flex; align-items:center; gap:11px; text-align:left; width:100%;
+    padding:11px 14px; border:1.5px solid var(--line); border-radius:var(--r-s); background:var(--surface);
+    font-size:.85rem; font-weight:600; color:var(--ink);
+    transition:border-color .18s var(--ease), background .18s var(--ease), transform .12s var(--ease-spring);
+  }
+  .quiz-opt:hover:not(:disabled){ border-color:var(--amber); background:var(--amber-glow); }
+  .quiz-opt:active:not(:disabled){ transform:scale(.98); }
+  .quiz-opt:disabled{ cursor:default; }
+  .quiz-opt-letter{
+    width:22px; height:22px; border-radius:50%; background:var(--paper); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; color:var(--ink-soft);
+    transition:background .18s var(--ease), color .18s var(--ease);
+  }
+  .quiz-opt.correct{ border-color:var(--green); background:var(--green-soft); }
+  .quiz-opt.correct .quiz-opt-letter{ background:var(--green); color:#fff; }
+  .quiz-opt.wrong{ border-color:var(--brick); background:var(--brick-soft); }
+  .quiz-opt.wrong .quiz-opt-letter{ background:var(--brick); color:#fff; }
+  .quiz-feedback{
+    margin-top:13px; padding:12px 14px; border-radius:var(--r-s); font-size:.83rem; font-weight:600;
+    display:flex; align-items:flex-start; gap:9px; line-height:1.4;
+    animation:fadeUp .3s var(--ease-out) both;
+  }
+  .quiz-feedback.correct{ background:var(--green-soft); color:#1f7a45; }
+  .quiz-feedback.wrong{ background:var(--brick-soft); color:#b83a2e; }
+  .quiz-next-row{ margin-top:12px; }
+
+  /* ══════════════════ CONTAINER / SECTION ══════════════════ */
+  .container{ max-width:760px; margin:0 auto; padding:0 20px; }
+  .section-header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin:34px 0 16px;
+  }
+  .section-title{
+    font-family:var(--font-display); font-weight:600; font-size:1.2rem; color:var(--ink); letter-spacing:-.01em;
+  }
+  .section-count{ font-size:.8rem; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+  /* ══════════════════ FILTER CHIPS ══════════════════ */
+  .filter-row{ display:flex; gap:9px; overflow-x:auto; padding-bottom:2px; scroll-snap-type:x proximity; }
+  .filter-row::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex-shrink:0; padding:8px 17px; border-radius:var(--r-full); font-size:.83rem; font-weight:600;
+    border:1.5px solid var(--line); background:var(--surface); color:var(--ink-soft);
+    transition:background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .12s var(--ease-spring);
+    scroll-snap-align:start;
+  }
+  .chip:active{ transform:scale(.95); }
+  .chip.active{ background:var(--navy); color:var(--paper); border-color:var(--navy); }
+
+  /* ══════════════════ COURSE GRID / CARD ══════════════════ */
+  .courses-grid{ display:flex; flex-direction:column; gap:16px; margin:20px 0 48px; }
+  .course-card{
+    display:flex; flex-direction:column; background:var(--paper-card); border:1px solid var(--line);
+    border-radius:var(--r-l); overflow:hidden; cursor:pointer;
+    transition:transform .28s var(--ease-spring), box-shadow .28s var(--ease), border-color .28s var(--ease);
+    will-change:transform;
+  }
+  .course-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-2); border-color:var(--line-hover); }
+  .course-card:active{ transform:translateY(-1px) scale(.995); }
+  .course-card-thumb{ position:relative; width:100%; aspect-ratio:16/9; flex-shrink:0; overflow:hidden; background:var(--line); }
+  .course-card-img{ width:100%; height:100%; object-fit:cover; transition:transform .5s var(--ease); }
+  .course-card:hover .course-card-img{ transform:scale(1.06); }
+  .course-card-badges{ position:absolute; top:9px; left:9px; display:flex; flex-direction:column; gap:5px; align-items:flex-start; }
+  .course-card-body{ flex:1; min-width:0; display:flex; flex-direction:column; padding:14px 16px 16px; }
+  .course-card-title{ font-weight:700; font-size:1.02rem; line-height:1.28; color:var(--ink); letter-spacing:-.005em; }
+  .course-card-desc{ font-size:.82rem; color:var(--muted); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .course-card-price{ display:flex; align-items:baseline; gap:7px; margin-top:auto; padding-top:12px; }
+  .price-current{ font-family:var(--font-display); font-weight:600; font-size:1.18rem; color:var(--ink); }
+  .price-original{ font-size:.78rem; color:var(--muted); text-decoration:line-through; }
+  .price-discount{ font-size:.74rem; color:var(--green); font-weight:700; }
+  .course-card-meta{ display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; }
+  .meta-tag{ font-size:.71rem; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); padding:3px 9px; border-radius:var(--r-full); font-weight:500; }
+
+  /* ══════════════════ BADGES ══════════════════ */
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-size:.66rem; font-weight:700; padding:4px 9px; border-radius:var(--r-full); letter-spacing:.1px; }
+  .badge-live{ background:var(--surface); color:var(--brick); box-shadow:var(--shadow-1); }
+  .badge-live .dot{ width:5px; height:5px; border-radius:50%; background:var(--brick); animation:pulseDot 1.6s ease-in-out infinite; }
+  .badge-recorded{ background:var(--surface); color:var(--ink-soft); box-shadow:var(--shadow-1); }
+  .badge-inactive{ background:var(--surface); color:var(--muted); box-shadow:var(--shadow-1); }
+  .badge-enrolled{ background:var(--green); color:#fff; }
+  .badge-primary{ background:var(--navy); color:var(--paper); }
+  .badge-green{ background:var(--green); color:#fff; }
+  .badge-upcoming{ background:#fff; color:var(--amber-deep); box-shadow:var(--shadow-1); }
+  .badge-completed{ background:#fff; color:var(--muted); box-shadow:var(--shadow-1); }
+
+  /* ══════════════════ BUTTONS ══════════════════ */
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:10px 18px; border-radius:var(--r-s); font-size:.84rem; font-weight:700; transition:opacity .18s var(--ease), transform .15s var(--ease-spring), background .18s var(--ease), box-shadow .18s var(--ease); letter-spacing:-.005em; }
+  .btn:active{ transform:scale(.965); }
+  .btn-primary{ background:var(--navy); color:var(--paper); }
+  .btn-primary:hover{ background:var(--navy-2); box-shadow:0 4px 14px -4px rgba(19,42,77,.4); }
+  .btn-amber{ background:var(--amber); color:#fff; }
+  .btn-amber:hover{ background:var(--amber-deep); box-shadow:0 4px 14px -4px rgba(212,132,31,.5); }
+  .btn-outline{ background:transparent; border:1.5px solid var(--line); color:var(--ink-soft); }
+  .btn-outline:hover{ border-color:var(--ink-soft); color:var(--ink); background:rgba(18,19,28,.03); }
+  .btn-ghost{ color:var(--ink-soft); font-weight:600; }
+  .btn-ghost:hover{ color:var(--ink); }
+  .btn-danger{ background:transparent; border:1.5px solid #f0cec8; color:var(--brick); }
+  .btn-danger:hover{ background:var(--brick-soft); }
+  .btn-live{ background:var(--brick); color:#fff; }
+  .btn-live:hover{ background:#c53f32; box-shadow:0 4px 14px -4px rgba(220,76,62,.5); }
+  .btn-disabled{ background:var(--line-soft); color:var(--muted); cursor:not-allowed; }
+  .btn-disabled:active{ transform:none; }
+  .btn-sm{ padding:7px 13px; font-size:.76rem; }
+  .btn-icon{ width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--muted); flex-shrink:0; transition:background .15s var(--ease), color .15s var(--ease); }
+
+  /* ══════════════════ LOADERS / STATES ══════════════════ */
+  .loader-center{ display:flex; justify-content:center; padding:56px 0; }
+  .spinner{ width:24px; height:24px; border:2.5px solid var(--line); border-top-color:var(--amber); border-radius:50%; animation:spin .65s linear infinite; }
+  .dl-spinner{ display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:50%; animation:spin .65s linear infinite; vertical-align:-2px; margin-right:3px; }
+  .skeleton-card{ display:flex; flex-direction:column; background:var(--paper-card); border:1px solid var(--line); border-radius:var(--r-l); overflow:hidden; }
+  .skeleton-box{
+    background:linear-gradient(100deg, var(--line-soft) 30%, var(--skeleton-hi) 45%, var(--skeleton-hi) 55%, var(--line-soft) 70%);
+    background-size:250% 100%; animation:shimmer 1.6s ease-in-out infinite; border-radius:var(--r-s);
+  }
+  .empty-state, .error-state{ text-align:center; padding:56px 20px; color:var(--muted); animation:fadeUp .35s var(--ease-out) both; }
+  .empty-state-icon{ font-size:2.1rem; margin-bottom:12px; }
+  .empty-state h3, .error-state h3{ font-family:var(--font-display); font-size:1.1rem; color:var(--ink); margin-bottom:5px; font-weight:600; }
+  .empty-state p, .error-state p{ font-size:.86rem; line-height:1.5; max-width:34ch; margin:0 auto; }
+  .error-state svg{ margin-bottom:12px; }
+
+  /* ══════════════════ BATCH HERO ══════════════════ */
+  .batch-hero{ background:linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%); padding:24px 20px 30px; position:relative; overflow:hidden; }
+  .batch-hero::before{
+    content:''; position:absolute; top:-80px; right:-80px; width:280px; height:280px; border-radius:50%;
+    background:radial-gradient(circle, var(--amber-glow) 0%, transparent 70%);
+  }
+  .batch-hero::after{
+    content:''; position:absolute; bottom:-100px; left:-60px; width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle, rgba(47,158,92,.08) 0%, transparent 70%);
+  }
+  .batch-hero-inner{ max-width:760px; margin:0 auto; position:relative; z-index:1; }
+  .batch-hero-thumb{ width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:var(--r-l); margin-bottom:18px; box-shadow:var(--shadow-3); }
+  .batch-hero-title{ font-family:var(--font-display); font-weight:600; font-size:1.5rem; color:#fff; line-height:1.18; letter-spacing:-.01em; }
+  .batch-hero-price{ display:flex; align-items:baseline; gap:11px; margin-top:12px; }
+  .batch-price-big{ font-family:var(--font-display); font-size:1.7rem; font-weight:700; color:var(--amber); }
+  .batch-price-orig{ font-size:.87rem; color:rgba(255,255,255,.4); text-decoration:line-through; }
+
+  /* ══════════════════ TABS ══════════════════ */
+  .tabs-nav{
+    display:flex; gap:2px; max-width:760px; margin:0 auto; padding:0 14px;
+    background:var(--topbar-bg); backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    border-bottom:1px solid var(--line);
+    position:sticky; top:62px; z-index:90; overflow-x:auto;
+  }
+  .tabs-nav::-webkit-scrollbar{ display:none; }
+  .tab-btn{
+    flex-shrink:0; display:flex; align-items:center; gap:6px;
+    padding:14px 15px; font-size:.83rem; font-weight:600; color:var(--muted);
+    position:relative; transition:color .2s var(--ease);
+  }
+  .tab-btn::after{
+    content:''; position:absolute; left:14px; right:14px; bottom:0; height:2.5px;
+    background:var(--amber); border-radius:2px 2px 0 0;
+    transform:scaleX(0); transform-origin:center; transition:transform .3s var(--ease-spring);
+  }
+  .tab-btn.active{ color:var(--ink); }
+  .tab-btn.active::after{ transform:scaleX(1); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; animation:fadeIn .3s var(--ease-out) both; }
+  .tab-content{ padding:24px 0 64px; }
+
+  /* ══════════════════ OVERVIEW ══════════════════ */
+  .overview-section{ margin-bottom:30px; }
+  .overview-section h3{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--font-display); font-weight:600; font-size:1.06rem; color:var(--ink); margin-bottom:14px; letter-spacing:-.005em;
+  }
+  .overview-section ul{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .overview-section ul li{
+    font-size:.89rem; color:var(--ink-soft); line-height:1.55; padding-left:18px; position:relative;
+  }
+  .overview-section ul li::before{ content:'—'; position:absolute; left:0; color:var(--amber-deep); }
+  .faculty-card{ display:flex; gap:15px; background:var(--paper-card); border:1px solid var(--line); border-radius:var(--r-m); padding:16px; }
+  .faculty-img{ width:58px; height:58px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--line); }
+  .faculty-name{ font-weight:700; font-size:.94rem; }
+  .faculty-role{ font-size:.79rem; color:var(--amber-deep); font-weight:600; margin-top:2px; }
+  .faculty-exp{ font-size:.77rem; color:var(--muted); margin-top:2px; }
+  .faculty-bio{ font-size:.82rem; color:var(--ink-soft); margin-top:7px; line-height:1.55; }
+  .faq-item{ border-bottom:1px solid var(--line); }
+  .faq-question{ width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:15px 2px; font-size:.89rem; font-weight:600; text-align:left; color:var(--ink); }
+  .faq-question svg{ transition:transform .3s var(--ease-spring); flex-shrink:0; color:var(--muted); }
+  .faq-question.open svg{ transform:rotate(180deg); color:var(--amber-deep); }
+  .faq-answer{ max-height:0; overflow:hidden; transition:max-height .35s var(--ease); font-size:.85rem; color:var(--ink-soft); line-height:1.6; }
+  .faq-answer.open{ max-height:400px; padding-bottom:16px; }
+
+  /* ══════════════════ TOPIC / CLASS LISTS ══════════════════ */
+  .topic-card{
+    display:flex; align-items:center; gap:13px; background:var(--paper-card); border:1px solid var(--line);
+    border-radius:var(--r-m); padding:14px 15px; margin-bottom:10px; cursor:pointer;
+    transition:border-color .2s var(--ease), transform .2s var(--ease-spring), box-shadow .2s var(--ease);
+  }
+  .topic-card:hover{ border-color:var(--line-hover); box-shadow:var(--shadow-1); transform:translateX(2px); }
+  .topic-card:active{ transform:translateX(2px) scale(.99); }
+  .topic-icon{ width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--paper); }
+  .topic-name{ font-weight:700; font-size:.9rem; color:var(--ink); }
+  .topic-sub{ font-size:.76rem; color:var(--muted); margin-top:2px; }
+  .topic-info{ flex:1; min-width:0; }
+
+  .class-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--r-m); margin-bottom:12px; overflow:hidden; transition:box-shadow .2s var(--ease), border-color .2s var(--ease); }
+  .class-card:hover{ box-shadow:var(--shadow-1); border-color:var(--line-hover); }
+  .class-card-head{ display:flex; align-items:flex-start; gap:12px; padding:14px 15px; }
+  .class-icon{ width:36px; height:36px; border-radius:10px; background:var(--paper); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .class-title{ font-weight:700; font-size:.88rem; color:var(--ink); line-height:1.32; }
+  .class-teacher{ font-size:.75rem; color:var(--muted); margin-top:3px; }
+  .class-time{ display:flex; align-items:center; gap:4px; font-size:.73rem; color:var(--muted); margin-top:4px; }
+  .class-card-tabs{ display:flex; border-top:1px solid var(--line); }
+  .class-tab-btn{ flex:1; padding:10px; font-size:.76rem; font-weight:600; color:var(--muted); position:relative; transition:color .18s var(--ease); }
+  .class-tab-btn::after{ content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--amber); transform:scaleX(0); transition:transform .25s var(--ease-spring); }
+  .class-tab-btn.active{ color:var(--ink); }
+  .class-tab-btn.active::after{ transform:scaleX(1); }
+  .class-tab-btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .class-tab-panel{ display:none; padding:13px 15px 15px; }
+  .class-tab-panel.active{ display:block; animation:fadeIn .25s var(--ease) both; }
+  .pdf-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .pdf-row:last-child{ border-bottom:none; }
+  .pdf-row-info{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .pdf-row-name{ font-size:.83rem; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ══════════════════ LECTURE COMPLETE / PROGRESS ══════════════════ */
+  .class-card.lecture-complete{ border-color:#bfe3cc; }
+  .class-card.lecture-complete .class-card-head{ background:var(--green-soft); }
+  .lecture-check{
+    width:27px; height:27px; border-radius:50%; border:1.5px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    transition:background .18s var(--ease), border-color .18s var(--ease), transform .15s var(--ease-spring);
+  }
+  .lecture-check:hover{ border-color:var(--green); }
+  .lecture-check:active{ transform:scale(.86); }
+  .lecture-check.lecture-check-done{ background:var(--green); border-color:var(--green); }
+  .lecture-progress{ margin-bottom:16px; }
+  .lecture-progress-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:.79rem; color:var(--ink-soft); font-weight:600; margin-bottom:7px; }
+  .lecture-progress-bar{ height:6px; border-radius:var(--r-full); background:var(--line-soft); overflow:hidden; }
+  .lecture-progress-fill{ height:100%; background:linear-gradient(90deg, var(--amber) 0%, var(--green) 100%); border-radius:var(--r-full); transition:width .4s var(--ease-out); }
+
+  /* ══════════════════ BATCH HIGHLIGHTS (Level / Completion / Lectures done) ══════════════════ */
+  .progress-card{
+    background:var(--paper-card); border:1px solid var(--line); border-radius:var(--r-l);
+    margin:18px 0 4px; overflow:hidden; box-shadow:var(--shadow-1);
+  }
+  .progress-card-header{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px; font-family:var(--font-display); font-weight:600; font-size:1.02rem;
+    color:var(--ink); letter-spacing:-.005em; cursor:pointer;
+  }
+  .progress-card-header .chev{ color:var(--muted); transition:transform .3s var(--ease-spring); flex-shrink:0; }
+  .progress-card.collapsed .chev{ transform:rotate(180deg); }
+  .progress-card-body{ padding:2px 18px 20px; }
+  .progress-card.collapsed .progress-card-body{ display:none; }
+  .progress-grid{ display:flex; gap:12px; }
+  .progress-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:9px; min-width:0; }
+  .ring-badge{
+    position:relative; width:100%; aspect-ratio:1/1; max-width:88px; border-radius:var(--r-m);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ring-badge-navy{ background:linear-gradient(155deg, var(--navy) 0%, var(--navy-2) 100%); }
+  .ring-badge-amber{ background:linear-gradient(155deg, #6b4415 0%, var(--amber-deep) 100%); }
+  .ring-badge-brick{ background:linear-gradient(155deg, #5c2119 0%, var(--brick) 100%); }
+  .ring-badge svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .ring-center{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; line-height:1.1; padding:0 4px; }
+  .ring-value{ font-family:var(--font-display); font-weight:700; font-size:.95rem; color:#fff; }
+  .ring-fraction{ font-family:var(--font-display); font-weight:700; font-size:.82rem; color:#fff; line-height:1.08; text-align:center; }
+  .ring-unit{ display:block; font-size:.58rem; color:rgba(255,255,255,.75); font-weight:600; margin-top:1px; text-transform:lowercase; }
+  .ring-level-text{ font-size:.7rem; font-weight:700; color:#fff; text-align:center; text-transform:capitalize; line-height:1.2; }
+  .progress-item-label{ font-size:.73rem; color:var(--muted); font-weight:600; text-align:center; }
+  .progress-sub{ margin-top:14px; font-size:.78rem; color:var(--muted); text-align:center; }
+
+  .tt-row{ display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); font-size:.87rem; }
+  .tt-row:last-child{ border-bottom:none; }
+  .tt-topic{ color:var(--ink); font-weight:600; }
+  .tt-time{ color:var(--muted); font-variant-numeric:tabular-nums; }
+
+  /* ══════════════════ MODAL ══════════════════ */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(18,19,28,.55); z-index:300;
+    align-items:flex-end; justify-content:center; backdrop-filter:blur(2px);
+  }
+  .modal-overlay.open{ display:flex; animation:fadeIn .2s var(--ease) both; }
+  .modal-sheet{
+    background:var(--paper-card); border-radius:22px 22px 0 0; padding:22px; width:100%; max-width:760px;
+    animation:slideUpSheet .32s var(--ease-out) both;
+    padding-bottom:calc(22px + env(safe-area-inset-bottom));
+  }
+  .modal-title{ font-family:var(--font-display); font-weight:600; font-size:1.08rem; margin-bottom:16px; }
+  .quality-btn{
+    display:flex; justify-content:space-between; align-items:center; width:100%;
+    padding:14px 15px; border:1.5px solid var(--line); border-radius:var(--r-m); margin-bottom:9px; font-weight:600; font-size:.88rem;
+    transition:border-color .18s var(--ease), background .18s var(--ease);
+  }
+  .quality-btn:hover{ border-color:var(--amber); background:var(--amber-glow); }
+  .quality-btn:active{ transform:scale(.98); }
+  .quality-size{ font-size:.75rem; color:var(--muted); font-weight:500; }
+
+  /* ══════════════════ DOWNLOADS PAGE ══════════════════ */
+  .dl-toolbar{ display:flex; align-items:center; gap:10px; margin:18px 0 16px; flex-wrap:wrap; }
+  .dl-batch-select{
+    display:inline-flex; align-items:center; gap:7px; padding:9px 14px; border-radius:var(--r-full);
+    border:1.5px solid var(--line); background:var(--surface); color:var(--ink); font-size:.82rem; font-weight:600;
+    max-width:100%; flex-shrink:0;
+  }
+  .dl-batch-select span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; }
+  .dl-type-toggle{ display:flex; gap:8px; }
+  .dl-item{
+    display:flex; gap:12px; background:var(--paper-card); border:1px solid var(--line); border-radius:var(--r-m);
+    padding:14px; margin-bottom:12px; align-items:flex-start;
+  }
+  .dl-item-icon{
+    width:44px; height:44px; border-radius:11px; background:var(--paper); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .dl-item-body{ flex:1; min-width:0; }
+  .dl-item-meta{ font-size:.71rem; color:var(--muted); font-weight:600; }
+  .dl-item-title{ font-weight:700; font-size:.89rem; color:var(--ink); margin-top:2px; line-height:1.32; }
+  .dl-item-batch{ font-size:.73rem; color:var(--amber-deep); margin-top:5px; font-weight:600; }
+  .dl-item-actions{ display:flex; gap:8px; margin-top:11px; }
+  .dl-item-actions .btn{ flex:1; }
+  .dl-item-del{
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); flex-shrink:0; transition:background .15s var(--ease), color .15s var(--ease);
+  }
+  .dl-item-del:hover{ background:var(--brick-soft); color:var(--brick); }
+  .batch-pick-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+    padding:14px 15px; border:1.5px solid var(--line); border-radius:var(--r-m); margin-bottom:9px; font-weight:600; font-size:.87rem;
+    transition:border-color .18s var(--ease), background .18s var(--ease);
+  }
+  .batch-pick-row:hover{ border-color:var(--amber); background:var(--amber-glow); }
+  .batch-pick-radio{
+    width:19px; height:19px; border-radius:50%; border:1.5px solid var(--line); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; transition:border-color .15s var(--ease);
+  }
+  .batch-pick-radio::after{ content:''; width:10px; height:10px; border-radius:50%; background:var(--navy); transform:scale(0); transition:transform .15s var(--ease-spring); }
+  .batch-pick-row.active .batch-pick-radio{ border-color:var(--navy); }
+  .batch-pick-row.active .batch-pick-radio::after{ transform:scale(1); }
+  .batch-sheet-sub{ font-size:.82rem; color:var(--muted); margin:-10px 0 16px; line-height:1.5; }
+  .batch-sheet-actions{ display:flex; gap:10px; margin-top:6px; }
+  .batch-sheet-actions .btn{ flex:1; }
+
+  /* ══════════════════ THEME PICKER MODAL ══════════════════ */
+  .theme-modal-overlay{ align-items:center; padding:20px; }
+  .theme-modal-sheet{
+    position:relative; background:var(--paper-card); border-radius:var(--r-l);
+    padding:26px 20px 22px; width:100%; max-width:460px; max-height:88vh; overflow-y:auto;
+    animation:scaleIn .28s var(--ease-spring) both;
+  }
+  .theme-modal-close{
+    position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; background:var(--line-soft); color:var(--ink-soft);
+    transition:background .15s var(--ease), color .15s var(--ease);
+  }
+  .theme-modal-close:hover{ background:var(--line); color:var(--ink); }
+  .theme-modal-title{ font-family:var(--font-display); font-weight:700; font-size:1.32rem; text-align:center; padding:0 30px; letter-spacing:-.01em; }
+  .theme-modal-sub{ font-size:.83rem; color:var(--muted); text-align:center; margin-top:5px; margin-bottom:22px; }
+  .theme-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  .theme-opt{
+    position:relative; display:flex; flex-direction:column; align-items:center; gap:9px;
+    padding:16px 8px 14px; border-radius:var(--r-m); border:1.5px solid var(--line); background:var(--paper);
+    transition:border-color .18s var(--ease), transform .15s var(--ease-spring), background .18s var(--ease);
+  }
+  .theme-opt:hover{ border-color:var(--amber); transform:translateY(-2px); }
+  .theme-opt:active{ transform:translateY(0) scale(.96); }
+  .theme-opt.active{ border-color:var(--amber-deep); background:var(--amber-glow); }
+  .theme-opt-icon{
+    width:50px; height:50px; border-radius:var(--r-m); display:flex; align-items:center; justify-content:center;
+    font-size:1.35rem; box-shadow:var(--shadow-1); flex-shrink:0;
+  }
+  .theme-opt-name{ font-size:.79rem; font-weight:700; color:var(--ink); text-align:center; line-height:1.25; }
+  .theme-opt-check{
+    position:absolute; top:8px; right:8px; width:19px; height:19px; border-radius:50%;
+    background:var(--amber-deep); color:#fff; display:flex; align-items:center; justify-content:center;
+    opacity:0; transform:scale(.4); transition:opacity .18s var(--ease), transform .18s var(--ease-spring);
+  }
+  .theme-opt.active .theme-opt-check{ opacity:1; transform:scale(1); }
+
+  /* ══════════════════ TOAST ══════════════════ */
+  #toast{
+    position:fixed; bottom:calc(24px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(8px); z-index:400;
+    padding:11px 20px; border-radius:var(--r-full); font-size:.84rem; font-weight:600; color:#fff;
+    box-shadow:var(--shadow-3); opacity:0; pointer-events:none; transition:opacity .35s var(--ease), transform .35s var(--ease-spring);
+    max-width:88vw; text-align:center;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .footer-note{ text-align:center; padding:24px 20px; font-size:.73rem; color:var(--muted); line-height:1.6; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ HOME PAGE ════════════════════ -->
+<div id="page-home" class="page active">
+  <header class="topbar" id="home-header">
+    <div class="topbar-inner" id="home-header-inner">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div class="brand-name">Selection Way</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <button class="icon-btn" onclick="openThemeModal()" aria-label="Change theme">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="17.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="8.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="6.5" cy="12.5" r="1.2" fill="currentColor" stroke="none"></circle><path d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-2.3a2.5 2.5 0 0 1-2.5-2.5c0-.65.26-1.24.68-1.67A2 2 0 0 0 14.5 2.3 10 10 0 0 0 12 2z"></path></svg>
+        </button>
+        <button class="icon-btn" onclick="toggleHomeSearch()" aria-label="Search">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="topbar-inner" id="home-search-row" style="display:none;">
+      <div class="search-row">
+        <input id="home-search-input" class="search-input" type="search" placeholder="Search batches…" oninput="filterCourses()">
+        <button class="icon-btn" onclick="closeHomeSearch()" aria-label="Close search">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Live &amp; recorded batches</div>
+    <h1 class="hero-title">Your seat is earned here.</h1>
+    <p class="hero-sub">SSC, Railways, Banking, Defence &amp; state exams — live classes, recordings and notes, all in one place.</p>
+    <div class="hero-stats" id="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num" id="stat-batches">—</span><div class="hero-stat-label">Batches</div></div>
+      <div class="hero-stat"><span class="hero-stat-num" id="stat-live">—</span><div class="hero-stat-label">Live now</div></div>
+      <div class="hero-stat"><span class="hero-stat-num" id="stat-enrolled">0</span><div class="hero-stat-label">Enrolled</div></div>
+    </div>
+
+    <div class="quiz-widget" id="hero-quiz">
+      <div class="quiz-widget-head">
+        <div class="quiz-widget-title">
+          <div class="quiz-widget-icon">⚡</div>
+          <div>
+            <div class="quiz-widget-heading">Quick Motivation Quiz</div>
+            <div class="quiz-widget-sub" id="quiz-streak-label">Answer a question, build your streak</div>
+          </div>
+        </div>
+        <div class="quiz-streak-badge" id="quiz-streak-badge">🔥 0</div>
+      </div>
+      <div id="quiz-body"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-header">
+      <div class="section-title">All Batches</div>
+      <span class="section-count" id="courses-count"></span>
+    </div>
+    <div class="filter-row">
+      <button class="chip active" onclick="setFilter('all',this)">All</button>
+      <button class="chip" onclick="setFilter('live',this)">Live</button>
+      <button class="chip" onclick="setFilter('recorded',this)">Recorded</button>
+      <button class="chip" onclick="setFilter('enrolled',this)">Enrolled</button>
+      <button class="chip" style="display:inline-flex;align-items:center;gap:5px;border-color:var(--amber-deep);color:var(--amber-deep);" onclick="navigate('downloads')">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Downloads
+      </button>
+    </div>
+    <div id="courses-grid" class="courses-grid"></div>
+  </div>
+
+  <div class="footer-note">Selection Way — built for students who show up daily.</div>
+</div>
+
+<!-- ════════════════════ BATCH PAGE ════════════════════ -->
+<div id="page-batch" class="page">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="back-link" onclick="goHome()">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"></path></svg>
+        All Batches
+      </button>
+      <span id="batch-header-title" class="batch-header-title"></span>
+      <button class="icon-btn" onclick="openThemeModal()" aria-label="Change theme" style="margin-left:auto;">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="17.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="8.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="6.5" cy="12.5" r="1.2" fill="currentColor" stroke="none"></circle><path d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-2.3a2.5 2.5 0 0 1-2.5-2.5c0-.65.26-1.24.68-1.67A2 2 0 0 0 14.5 2.3 10 10 0 0 0 12 2z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="batch-hero" id="batch-hero">
+    <div class="batch-hero-inner" id="batch-hero-inner">
+      <div class="loader-center"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="progress-highlights"></div>
+  </div>
+
+  <nav class="tabs-nav" id="batch-tabs-nav" style="display:none;">
+    <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+    <button class="tab-btn" onclick="switchTab('videos',this)">Videos</button>
+    <button class="tab-btn" onclick="switchTab('notes',this)">Notes</button>
+    <button class="tab-btn" onclick="switchTab('timetable',this)">Live &amp; Timetable</button>
+  </nav>
+
+  <div class="container" id="batch-tab-content" style="display:none;">
+    <div class="tab-content">
+      <div id="tab-overview" class="tab-panel active"></div>
+      <div id="tab-videos" class="tab-panel"><div id="videos-inner"></div></div>
+      <div id="tab-notes" class="tab-panel"><div id="notes-inner"></div></div>
+      <div id="tab-timetable" class="tab-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MY DOWNLOADS PAGE ════════════════════ -->
+<div id="page-downloads" class="page">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="back-link" onclick="goHome()">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        Home
+      </button>
+      <div class="brand-name">My Downloads</div>
+      <button class="icon-btn" style="margin-left:auto;" onclick="confirmClearDownloads()" aria-label="Clear all downloads" title="Clear all">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="dl-toolbar">
+      <button class="dl-batch-select" id="dl-batch-btn" onclick="openBatchSheet()">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+        <span id="dl-batch-btn-label">All batches</span>
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dl-type-toggle">
+        <button class="chip active" id="dl-tab-video" onclick="setDownloadsType('video',this)">Videos</button>
+        <button class="chip" id="dl-tab-pdf" onclick="setDownloadsType('pdf',this)">Documents</button>
+      </div>
+    </div>
+    <div id="downloads-list"></div>
+  </div>
+  <div class="footer-note">Files are saved by your device's download manager — this list just keeps track of what you've downloaded and which batch it came from.</div>
+</div>
+
+<!-- ════════════════════ SELECT BATCH SHEET ════════════════════ -->
+<div class="modal-overlay" id="batch-sheet-modal" onclick="closeBatchSheet(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">Select Batch</div>
+    <p class="batch-sheet-sub">Only batches with downloaded content are shown here.</p>
+    <div id="batch-sheet-list"></div>
+    <div class="batch-sheet-actions">
+      <button class="btn btn-outline" onclick="clearBatchFilter()">Clear Filters</button>
+      <button class="btn btn-primary" onclick="closeBatchSheet()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ QUALITY MODAL ════════════════════ -->
+<div class="modal-overlay" id="quality-modal" onclick="closeQualityModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">Select video quality</div>
+    <div id="quality-options"></div>
+    <button class="btn btn-outline" style="width:100%;margin-top:4px;" onclick="closeQualityModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ════════════════════ THEME PICKER MODAL ════════════════════ -->
+<div class="modal-overlay theme-modal-overlay" id="theme-modal" onclick="closeThemeModal(event)">
+  <div class="theme-modal-sheet">
+    <button class="theme-modal-close" onclick="closeThemeModal()" aria-label="Close">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+    </button>
+    <div class="theme-modal-title">Select Theme Mode</div>
+    <div class="theme-modal-sub">Apna vibe chuno — instantly applies</div>
+    <div class="theme-grid" id="theme-grid"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════ STATE (backend unchanged) ══════════════════
+const SW_KEY='swEnrolledCourses';
+const API_COURSES='https://backend.multistreaming.site/api/courses/';
+const API_NOTES_HOST='https://gdgoenkaratia.com/api/courses/';
+let allCourses=[];
+let currentFilter='all';
+let currentBatchId=null;
+let batchData=null;
+let videoTopicSelected=null;
+let videoSubjectSelected=null;
+let notesTopicSelected=null;
+let batchTopicsCache=null;
+let progressCardCollapsed=false;
+
+function getEnrolled(){ try{ const v=JSON.parse(localStorage.getItem(SW_KEY)||'[]'); return Array.isArray(v)?v:[]; }catch{ return []; } }
+function saveEnrolled(ids){ localStorage.setItem(SW_KEY, JSON.stringify(ids)); }
+
+// ══════════════════ DOWNLOADS (on-device record of what's been downloaded, per batch) ══════════════════
+const SW_DOWNLOADS_KEY='swDownloads';
+let downloadsTypeFilter='video';
+let downloadsBatchFilter='';   // '' = all batches
+let dlSheetTemp='';
+function getDownloads(){ try{ const v=JSON.parse(localStorage.getItem(SW_DOWNLOADS_KEY)||'[]'); return Array.isArray(v)?v:[]; }catch{ return []; } }
+function saveDownloadsList(list){ localStorage.setItem(SW_DOWNLOADS_KEY, JSON.stringify(list)); }
+function addDownloadRecord(rec){ const list=getDownloads(); list.unshift(rec); saveDownloadsList(list); }
+function removeDownloadRecord(id){
+  saveDownloadsList(getDownloads().filter(d=>d.id!==id));
+  renderDownloadsList();
+  showToast('Removed from downloads','success');
+}
+function confirmClearDownloads(){
+  if(!getDownloads().length){ showToast("You don't have any downloads yet",'error'); return; }
+  if(confirm('Remove all items from this list? (Files already saved on your device are not deleted.)')){
+    saveDownloadsList([]);
+    downloadsBatchFilter='';
+    renderDownloadsPage();
+    showToast('Downloads list cleared','success');
+  }
+}
+function setDownloadsType(type,btn){
+  downloadsTypeFilter=type;
+  document.querySelectorAll('.dl-type-toggle .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderDownloadsList();
+}
+function renderDownloadsPage(){
+  document.getElementById('dl-tab-video').classList.toggle('active',downloadsTypeFilter==='video');
+  document.getElementById('dl-tab-pdf').classList.toggle('active',downloadsTypeFilter==='pdf');
+  updateBatchSelectLabel();
+  renderDownloadsList();
+}
+function updateBatchSelectLabel(){
+  const match=downloadsBatchFilter?getDownloads().find(d=>d.batchId===downloadsBatchFilter):null;
+  document.getElementById('dl-batch-btn-label').textContent = match ? match.batchTitle : 'All batches';
+}
+function renderDownloadsList(){
+  const el=document.getElementById('downloads-list');
+  let list=getDownloads().filter(d=>d.type===downloadsTypeFilter);
+  if(downloadsBatchFilter) list=list.filter(d=>d.batchId===downloadsBatchFilter);
+  if(list.length===0){
+    el.innerHTML=`<div class="empty-state">
+      <div class="empty-state-icon">${downloadsTypeFilter==='video'?'🎬':'📄'}</div>
+      <h3>No ${downloadsTypeFilter==='video'?'downloaded videos':'downloaded documents'}</h3>
+      <p>${downloadsTypeFilter==='video'?'Recordings you download from a batch will show up here.':'PDFs and notes you download will show up here.'}</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML=list.map(renderDownloadItem).join('');
+}
+function renderDownloadItem(d){
+  const dateStr=new Date(d.date).toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'});
+  const icon=d.type==='video'
+    ?'<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#12131c" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>'
+    :'<svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  const dlFn=d.type==='video'?'downloadVideo':'downloadPdf';
+  return `
+  <div class="dl-item enter-fast">
+    <div class="dl-item-icon">${icon}</div>
+    <div class="dl-item-body">
+      <div class="dl-item-meta">${d.type==='video'?'Lecture':'Document'}${d.quality?' · '+esc(d.quality):''} · ${dateStr}</div>
+      <div class="dl-item-title">${esc(d.title)}</div>
+      <div class="dl-item-batch">${esc(d.batchTitle||'Unknown batch')}</div>
+      <div class="dl-item-actions">
+        <button class="btn btn-outline btn-sm" onclick="openLink('${esc(d.url)}')">${d.type==='video'?'Watch':'Open'}</button>
+        <button class="btn btn-primary btn-sm" onclick="${dlFn}(this,'${esc(d.url)}','${jsStr(d.filename||d.title)}')">Download again</button>
+      </div>
+    </div>
+    <button class="dl-item-del" aria-label="Remove" title="Remove from downloads" onclick="removeDownloadRecord('${jsStr(d.id)}')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>
+  </div>`;
+}
+
+// ── Select Batch bottom sheet ──
+function openBatchSheet(){
+  dlSheetTemp=downloadsBatchFilter;
+  renderBatchSheetOptions();
+  document.getElementById('batch-sheet-modal').classList.add('open');
+}
+function renderBatchSheetOptions(){
+  const batchesMap=new Map();
+  getDownloads().forEach(d=>{ if(d.batchId && !batchesMap.has(d.batchId)) batchesMap.set(d.batchId, d.batchTitle||'Unknown batch'); });
+  const el=document.getElementById('batch-sheet-list');
+  if(batchesMap.size===0){
+    el.innerHTML='<p style="font-size:.85rem;color:var(--muted);padding:8px 0 4px;">No downloads yet — batches will show up here once you download something.</p>';
+    return;
+  }
+  el.innerHTML=[...batchesMap.entries()].map(([id,title])=>`
+    <button class="batch-pick-row ${dlSheetTemp===id?'active':''}" onclick="pickBatchFilter('${jsStr(id)}')">
+      <span style="text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(title)}</span>
+      <span class="batch-pick-radio"></span>
+    </button>`).join('');
+}
+function pickBatchFilter(id){ dlSheetTemp=id; renderBatchSheetOptions(); }
+function clearBatchFilter(){ dlSheetTemp=''; renderBatchSheetOptions(); }
+function closeBatchSheet(e){
+  if(e && e.target!==document.getElementById('batch-sheet-modal')) return;
+  downloadsBatchFilter=dlSheetTemp;
+  document.getElementById('batch-sheet-modal').classList.remove('open');
+  updateBatchSelectLabel();
+  renderDownloadsList();
+}
+
+// ── Lecture "mark as complete" state ──
+const SW_COMPLETED_KEY='swCompletedLectures';
+function getCompleted(){ try{ const v=JSON.parse(localStorage.getItem(SW_COMPLETED_KEY)||'[]'); return Array.isArray(v)?v:[]; }catch{ return []; } }
+function saveCompleted(ids){ localStorage.setItem(SW_COMPLETED_KEY, JSON.stringify(ids)); }
+function isLectureComplete(key){ return getCompleted().includes(key); }
+// Classes don't carry a stable id in this API response, so build one from what does uniquely identify a lecture.
+function lectureKey(topicName,cls){ return currentBatchId+'::'+(topicName||'')+'::'+(cls.title||'')+'::'+(cls.startDate||''); }
+function countTopicCompleted(topic){
+  const ids=getCompleted();
+  return (topic.classes||[]).filter(cls=>ids.includes(lectureKey(topic.topicName,cls))).length;
+}
+function toggleLectureComplete(key,btn){
+  let ids=getCompleted();
+  const was=ids.includes(key);
+  ids = was ? ids.filter(x=>x!==key) : [...ids, key];
+  saveCompleted(ids);
+  const card=btn.closest('.class-card');
+  if(was){
+    btn.classList.remove('lecture-check-done');
+    btn.innerHTML='';
+    btn.setAttribute('aria-label','Mark as completed');
+    if(card) card.classList.remove('lecture-complete');
+  }else{
+    btn.classList.add('lecture-check-done');
+    btn.innerHTML='<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+    btn.setAttribute('aria-label','Mark as not completed');
+    if(card) card.classList.add('lecture-complete');
+  }
+  updateTopicProgress();
+  if(batchTopicsCache) renderBatchProgressCard(batchTopicsCache);
+}
+
+function updateTopicProgress(){
+  if(!videoTopicSelected) return;
+  const items=videoTopicSelected.classes||[];
+  const total=items.length;
+  const done=items.filter(cls=>isLectureComplete(lectureKey(videoTopicSelected.topicName,cls))).length;
+  const pct=total>0?Math.round(done/total*100):0;
+  const level=computeLevel(pct);
+  const r=26, circumference=2*Math.PI*r;
+  const dash=(circumference*pct/100).toFixed(1);
+  const gap=(circumference-dash).toFixed(1);
+  const levelEl=document.getElementById('folder-progress-level');
+  const pctEl=document.getElementById('folder-progress-pct');
+  const pctRing=document.getElementById('folder-progress-pct-ring');
+  const fracEl=document.getElementById('folder-progress-fraction');
+  const lecRing=document.getElementById('folder-progress-lec-ring');
+  const subEl=document.getElementById('folder-progress-sub');
+  if(levelEl) levelEl.textContent=level;
+  if(pctEl) pctEl.textContent=pct+'%';
+  if(pctRing) pctRing.setAttribute('stroke-dasharray',`${dash} ${gap}`);
+  if(fracEl) fracEl.textContent=`${done}/${total}`;
+  if(lecRing) lecRing.setAttribute('stroke-dasharray',`${dash} ${gap}`);
+  if(subEl) subEl.textContent=`${done} of ${total} lecture${total!==1?'s':''} completed in ${videoTopicSelected.topicName||''}`;
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function openLink(url){ if(url) window.open(url,'_blank','noopener,noreferrer'); }
+
+// ── Local placeholder thumbnail (drawn in-browser, no network call — so it can never fail to load) ──
+function phSvg(w,h,label){
+  const txt=(String(label||'')).replace(/[^a-zA-Z0-9]/g,'').slice(0,2).toUpperCase()||'SW';
+  const fs=Math.round(Math.min(w,h)*0.32);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#132a4d"/><stop offset="100%" stop-color="#1d3b66"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="52%" fill="#e8ac5c" font-family="Georgia,serif" font-size="${fs}" font-weight="700" text-anchor="middle" dominant-baseline="middle">${txt}</text></svg>`;
+  return 'data:image/svg+xml,'+encodeURIComponent(svg);
+}
+// Upgrades an http:// image URL to https:// when the page itself is https, so it isn't silently dropped as mixed content.
+function safeImgUrl(url){
+  if(!url) return '';
+  if(location.protocol==='https:' && url.startsWith('http://')) return url.replace('http://','https://');
+  return url;
+}
+// Escapes text for safe use inside a single-quoted JS string embedded in an HTML attribute.
+function jsStr(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,' '); }
+function safeFilename(s){ return String(s||'video').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,80)||'video'; }
+
+// ── Trigger the download directly — hand the URL straight to the browser's own
+//    download manager instead of fetching the whole file into memory first.
+//    (That old fetch()+blob approach is what made quality buttons like 240p/480p
+//    look "stuck downloading" for a while before anything happened.)
+async function downloadVideo(btn,url,filename,meta){
+  if(!url) return;
+  const original=btn?btn.innerHTML:null;
+  const finish=(ok,msg)=>{
+    if(btn){ btn.disabled=false; btn.innerHTML=original; }
+    if(msg) showToast(msg, ok?'success':'error');
+  };
+  try{
+    if(btn){ btn.disabled=true; btn.innerHTML='<span class="dl-spinner"></span> 0%'; }
+    // Goes through our own /video-proxy edge function instead of hranker.com directly —
+    // that function fetches the file server-side (no CORS involved there) and streams
+    // it back from our own domain, which the browser is always allowed to download from.
+    const proxied='/video-proxy?url='+encodeURIComponent(url)+'&name='+encodeURIComponent(filename||'video.mp4');
+    const res=await fetch(proxied);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const total=Number(res.headers.get('Content-Length')||0);
+    let loaded=0;
+    const reader=res.body?res.body.getReader():null;
+    const chunks=[];
+    if(reader){
+      while(true){
+        const {done,value}=await reader.read();
+        if(done) break;
+        chunks.push(value);
+        loaded+=value.length;
+        if(btn && total){
+          const pct=Math.round(loaded/total*100);
+          btn.innerHTML='<span class="dl-spinner"></span> '+pct+'%';
+        }
+      }
+    }
+    const blob=chunks.length?new Blob(chunks):await res.blob();
+    const blobUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=blobUrl;
+    a.download=filename||'video.mp4';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(blobUrl),4000);
+    if(meta){
+      addDownloadRecord({
+        id:'dl_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        type:'video',
+        title:meta.lectureTitle||filename||'Video',
+        quality:meta.quality||'',
+        batchId:meta.batchId||'',
+        batchTitle:meta.batchTitle||'Unknown batch',
+        url, filename, date:new Date().toISOString()
+      });
+    }
+    finish(true,'Downloaded — check your Downloads folder');
+  }catch(e){
+    // Most likely the video server blocks cross-origin fetch (no CORS headers).
+    // Falling back to opening it directly is the only thing that can still work then.
+    finish(false,"Couldn't download directly — opening video instead");
+    openLink(url);
+  }
+}
+
+// ── Same idea, for PDFs/notes — lets a "Downloaded" record show up in My Downloads too ──
+function downloadPdf(btn,url,filename,meta){
+  if(!url) return;
+  try{
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename||'document.pdf';
+    a.rel='noopener noreferrer';
+    a.target='_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast('Download started','success');
+    if(meta){
+      addDownloadRecord({
+        id:'dl_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        type:'pdf',
+        title:meta.docTitle||filename||'Document',
+        quality:'',
+        batchId:meta.batchId||'',
+        batchTitle:meta.batchTitle||'Unknown batch',
+        url, filename, date:new Date().toISOString()
+      });
+    }
+    if(btn){
+      const original=btn.innerHTML;
+      btn.disabled=true;
+      btn.innerHTML='<span class="dl-spinner"></span>';
+      setTimeout(()=>{ btn.disabled=false; btn.innerHTML=original; },1200);
+    }
+  }catch(e){
+    showToast("Couldn't start the download — opening file instead",'error');
+    openLink(url);
+  }
+}
+
+// ══════════════════ HERO MOTIVATION QUIZ ══════════════════
+const SW_QUIZ_STATS_KEY='swQuizStats';
+const SW_QUIZ_SEEN_KEY='swQuizSeenIdx';
+
+const QUIZ_QUOTES_CORRECT=[
+  "Sharp thinking — keep that momentum going.",
+  "That's the discipline that clears exams.",
+  "One more right answer, one step closer to your seat.",
+  "Exactly right — your prep is paying off.",
+  "Nailed it. Consistency like this wins exams.",
+  "Great instinct — trust your preparation.",
+  "Correct! Small wins like this add up fast."
+];
+const QUIZ_QUOTES_WRONG=[
+  "Not this time — but every miss sharpens your recall.",
+  "Close. Note it down and it won't slip again.",
+  "That's how learning works — mistake, memory, mastery.",
+  "No stress — the exam rewards those who keep showing up.",
+  "Miss it today, master it tomorrow. Keep going.",
+  "Every topper has a list of questions they once got wrong."
+];
+
+const QUIZ_BANK=[
+  {q:"Which is the largest state in India by area?", o:["Rajasthan","Madhya Pradesh","Maharashtra","Uttar Pradesh"], a:0},
+  {q:"The headquarters of the Reserve Bank of India is located in which city?", o:["New Delhi","Mumbai","Kolkata","Chennai"], a:1},
+  {q:"Who was the first President of India?", o:["Jawaharlal Nehru","Dr. Rajendra Prasad","Sardar Patel","Zakir Husain"], a:1},
+  {q:"What is the SI unit of electric current?", o:["Volt","Watt","Ampere","Ohm"], a:2},
+  {q:"Which river is known as the 'Sorrow of Bihar'?", o:["Ganga","Kosi","Son","Gandak"], a:1},
+  {q:"A train covers 60 km in 45 minutes. What is its speed?", o:["75 km/h","80 km/h","70 km/h","72 km/h"], a:1},
+  {q:"Which part of speech describes an action?", o:["Noun","Adjective","Verb","Adverb"], a:2},
+  {q:"The Constitution of India was adopted on which date?", o:["26 January 1950","15 August 1947","26 November 1949","2 October 1950"], a:2},
+  {q:"Which gas do plants absorb from the atmosphere for photosynthesis?", o:["Oxygen","Nitrogen","Carbon dioxide","Hydrogen"], a:2},
+  {q:"What is the full form of RAM in computers?", o:["Random Access Memory","Read Access Memory","Rapid Access Module","Run Access Memory"], a:0},
+  {q:"Which Article of the Indian Constitution abolishes untouchability?", o:["Article 14","Article 15","Article 17","Article 21"], a:2},
+  {q:"5 workers finish a job in 12 days. How many days will 10 workers take?", o:["6 days","4 days","8 days","10 days"], a:0},
+  {q:"Who wrote India's national anthem, 'Jana Gana Mana'?", o:["Bankim Chandra Chatterjee","Rabindranath Tagore","Sarojini Naidu","Subhas Chandra Bose"], a:1},
+  {q:"Which is the smallest prime number?", o:["0","1","2","3"], a:2},
+  {q:"The Battle of Plassey was fought in which year?", o:["1757","1764","1857","1707"], a:0},
+  {q:"Which vitamin does human skin produce on exposure to sunlight?", o:["Vitamin A","Vitamin C","Vitamin D","Vitamin K"], a:2},
+  {q:"Choose the correctly spelled word.", o:["Recieve","Receive","Receve","Receeve"], a:1},
+  {q:"India shares its longest border with which single country?", o:["Pakistan","China","Nepal","Bangladesh"], a:3},
+  {q:"What is 15% of 200?", o:["25","30","35","20"], a:1},
+  {q:"Which Indian city is known as the 'Silicon Valley of India'?", o:["Hyderabad","Pune","Bengaluru","Chennai"], a:2},
+  {q:"The term 'Fourth Estate' refers to which institution?", o:["Judiciary","Legislature","Press/Media","Executive"], a:2},
+  {q:"Which planet is known as the Red Planet?", o:["Venus","Mars","Jupiter","Saturn"], a:1},
+  {q:"Who is known as the chief architect of the Indian Constitution?", o:["Mahatma Gandhi","Jawaharlal Nehru","Dr. B.R. Ambedkar","Dr. Rajendra Prasad"], a:2},
+  {q:"A sum doubles itself in 8 years at simple interest. What is the rate?", o:["10%","12.5%","15%","8%"], a:1},
+  {q:"Which company originally developed the Android operating system?", o:["Google","Apple","Android Inc.","Samsung"], a:2},
+  {q:"Fill in the blank: She ___ to the market every day.", o:["go","goes","going","gone"], a:1},
+  {q:"What is the value of π (pi), rounded to two decimal places?", o:["3.14","3.41","3.12","3.16"], a:0},
+  {q:"Which gland is known as the 'master gland' of the human body?", o:["Thyroid","Pituitary","Adrenal","Pancreas"], a:1},
+  {q:"Which of these is a non-renewable source of energy?", o:["Solar energy","Wind energy","Coal","Tidal energy"], a:2},
+  {q:"Who was the first woman Prime Minister of India?", o:["Sonia Gandhi","Indira Gandhi","Pratibha Patil","Sarojini Naidu"], a:1}
+];
+
+let quizCurrentIdx=null;
+
+function getQuizStats(){
+  try{ const v=JSON.parse(localStorage.getItem(SW_QUIZ_STATS_KEY)||'{}'); return {streak:v.streak||0,best:v.best||0,correct:v.correct||0,attempted:v.attempted||0}; }catch{ return {streak:0,best:0,correct:0,attempted:0}; }
+}
+function saveQuizStats(s){ localStorage.setItem(SW_QUIZ_STATS_KEY, JSON.stringify(s)); }
+function getSeenQuizIdx(){ try{ const v=JSON.parse(localStorage.getItem(SW_QUIZ_SEEN_KEY)||'[]'); return Array.isArray(v)?v:[]; }catch{ return []; } }
+function saveSeenQuizIdx(v){ localStorage.setItem(SW_QUIZ_SEEN_KEY, JSON.stringify(v)); }
+
+function pickNextQuizIdx(){
+  let seen=getSeenQuizIdx();
+  let pool=QUIZ_BANK.map((_,i)=>i).filter(i=>!seen.includes(i));
+  if(pool.length===0){ seen=[]; pool=QUIZ_BANK.map((_,i)=>i); }
+  const idx=pool[Math.floor(Math.random()*pool.length)];
+  seen.push(idx);
+  saveSeenQuizIdx(seen);
+  return idx;
+}
+
+function initQuizWidget(){
+  updateQuizStreakBadge();
+  quizCurrentIdx=pickNextQuizIdx();
+  renderQuizQuestion();
+}
+function updateQuizStreakBadge(){
+  const s=getQuizStats();
+  const badge=document.getElementById('quiz-streak-badge');
+  if(badge) badge.textContent=`🔥 ${s.streak}`;
+  const sub=document.getElementById('quiz-streak-label');
+  if(sub) sub.textContent = s.attempted>0 ? `${s.correct}/${s.attempted} correct · best streak ${s.best}` : 'Answer a question, build your streak';
+}
+function renderQuizQuestion(){
+  const item=QUIZ_BANK[quizCurrentIdx];
+  const letters=['A','B','C','D'];
+  document.getElementById('quiz-body').innerHTML=`
+    <div class="quiz-question">${esc(item.q)}</div>
+    <div class="quiz-options" id="quiz-options">
+      ${item.o.map((opt,i)=>`<button class="quiz-opt" onclick="answerQuiz(${i})"><span class="quiz-opt-letter">${letters[i]}</span><span>${esc(opt)}</span></button>`).join('')}
+    </div>`;
+}
+function answerQuiz(choiceIdx){
+  const item=QUIZ_BANK[quizCurrentIdx];
+  document.querySelectorAll('#quiz-options .quiz-opt').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===item.a) b.classList.add('correct');
+    else if(i===choiceIdx) b.classList.add('wrong');
+  });
+  const isCorrect=choiceIdx===item.a;
+  const s=getQuizStats();
+  s.attempted++;
+  if(isCorrect){ s.correct++; s.streak++; if(s.streak>s.best) s.best=s.streak; }
+  else{ s.streak=0; }
+  saveQuizStats(s);
+  updateQuizStreakBadge();
+  const quote=isCorrect
+    ? QUIZ_QUOTES_CORRECT[Math.floor(Math.random()*QUIZ_QUOTES_CORRECT.length)]
+    : QUIZ_QUOTES_WRONG[Math.floor(Math.random()*QUIZ_QUOTES_WRONG.length)];
+  document.getElementById('quiz-body').insertAdjacentHTML('beforeend',`
+    <div class="quiz-feedback ${isCorrect?'correct':'wrong'}"><span>${isCorrect?'✅':'💡'}</span><span>${esc(quote)}</span></div>
+    <div class="quiz-next-row"><button class="btn btn-amber" style="width:100%;" onclick="nextQuizQuestion()">Next question</button></div>`);
+}
+function nextQuizQuestion(){
+  quizCurrentIdx=pickNextQuizIdx();
+  renderQuizQuestion();
+}
+
+// ══════════════════ ROUTING ══════════════════
+function parseHash(){
+  const h=location.hash.slice(1);
+  if(!h||h==='/') return {page:'home', id:null};
+  if(h==='/downloads') return {page:'downloads', id:null};
+  const m=h.match(/^\/batch\/(.+)/);
+  return m?{page:'batch', id:m[1]}:{page:'home', id:null};
+}
+function navigate(page,id=null){ location.hash = page==='batch' ? '/batch/'+id : page==='downloads' ? '/downloads' : '/'; }
+function goHome(){ navigate('home'); }
+window.addEventListener('hashchange', handleRoute);
+window.addEventListener('DOMContentLoaded', ()=>{ initHome(); initQuizWidget(); handleRoute(); });
+function handleRoute(){
+  const {page,id}=parseHash();
+  document.getElementById('page-home').classList.toggle('active', page==='home');
+  document.getElementById('page-batch').classList.toggle('active', page==='batch');
+  document.getElementById('page-downloads').classList.toggle('active', page==='downloads');
+  window.scrollTo(0,0);
+  if(page==='batch'&&id) loadBatch(id);
+  if(page==='downloads') renderDownloadsPage();
+}
+
+// ══════════════════ HOME ══════════════════
+function toggleHomeSearch(){
+  document.getElementById('home-header-inner').style.display='none';
+  document.getElementById('home-search-row').style.display='flex';
+  document.getElementById('home-search-input').focus();
+}
+function closeHomeSearch(){
+  document.getElementById('home-header-inner').style.display='flex';
+  document.getElementById('home-search-row').style.display='none';
+  document.getElementById('home-search-input').value='';
+  filterCourses();
+}
+
+function skeletonCards(n){
+  let h='';
+  for(let i=0;i<n;i++){
+    h+=`<div class="skeleton-card">
+      <div class="skeleton-box" style="width:100%;aspect-ratio:16/9;flex-shrink:0;border-radius:0;"></div>
+      <div style="display:flex;flex-direction:column;gap:9px;padding:14px 16px 16px;">
+        <div class="skeleton-box" style="height:14px;width:70%;"></div>
+        <div class="skeleton-box" style="height:11px;width:50%;"></div>
+        <div class="skeleton-box" style="height:17px;width:32%;margin-top:4px;"></div>
+      </div>
+    </div>`;
+  }
+  return h;
+}
+
+async function initHome(){
+  renderCoursesGrid(skeletonCards(5));
+  try{
+    const res=await fetch(API_COURSES);
+    if(!res.ok) throw new Error('Failed to fetch batches');
+    const j=await res.json();
+    if(j.state!==200) throw new Error(j.message||'Something went wrong');
+    allCourses=(j.data||[]).sort((a,b)=>(a.priority??999)-(b.priority??999));
+    updateHeroStats();
+    filterCourses();
+  }catch(e){
+    renderCoursesGrid(`<div class="error-state">
+      <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="${cssVar('--brick')}" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <h3>Couldn't load batches</h3><p>${esc(e.message)}. Check your connection and reload.</p>
+    </div>`);
+  }
+}
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function updateHeroStats(){
+  const enrolled=getEnrolled();
+  const live=allCourses.filter(c=>c.isLive&&c.status==='active').length;
+  document.getElementById('stat-batches').textContent=allCourses.length;
+  document.getElementById('stat-live').textContent=live;
+  document.getElementById('stat-enrolled').textContent=enrolled.length;
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  filterCourses();
+}
+
+function filterCourses(){
+  const input=document.getElementById('home-search-input');
+  const q=(input&&input.value||'').toLowerCase();
+  const enrolled=getEnrolled();
+  let list=allCourses;
+  if(q) list=list.filter(c=>c.title.toLowerCase().includes(q)||((c.short_description||'').toLowerCase().includes(q)));
+  if(currentFilter==='live') list=list.filter(c=>c.isLive&&c.status==='active');
+  else if(currentFilter==='recorded') list=list.filter(c=>c.isRecorded);
+  else if(currentFilter==='enrolled') list=list.filter(c=>enrolled.includes(c.id));
+
+  document.getElementById('courses-count').textContent=list.length+' batch'+(list.length!==1?'es':'');
+
+  if(list.length===0){
+    renderCoursesGrid(`<div class="empty-state"><div class="empty-state-icon">🔎</div><h3>No batches found</h3><p>Try a different filter or search term.</p></div>`);
+    return;
+  }
+  renderCoursesGrid(list.map(renderCourseCard).join(''));
+}
+
+function getThumbnail(c){ const src=c.banner||c.bannerSquare; return src?safeImgUrl(src):phSvg(300,300,c.title); }
+
+function renderCourseCard(c){
+  const enrolled=getEnrolled().includes(c.id);
+  const disc=(c.price&&c.price>c.discountPrice)?Math.round((1-c.discountPrice/c.price)*100):0;
+
+  let leftBadge='';
+  if(c.status==='inactive') leftBadge='<span class="badge badge-inactive">Inactive</span>';
+  else if(c.isLive) leftBadge='<span class="badge badge-live"><span class="dot"></span>Live</span>';
+  else if(c.isRecorded) leftBadge='<span class="badge badge-recorded">Recorded</span>';
+  const rightBadge=enrolled?'<span class="badge badge-enrolled">Enrolled</span>':'';
+
+  const discTag=disc>0?`<span class="price-discount">${disc}% off</span>`:'';
+  const origTag=(c.price&&c.price>c.discountPrice)?`<span class="price-original">₹${c.price}</span>`:'';
+  const metaLive=c.isLive?'<span class="meta-tag">Live classes</span>':'';
+  const metaRec=c.isRecorded?'<span class="meta-tag">Recorded</span>':'';
+  const metaVal=c.validity?`<span class="meta-tag">${esc(c.validity)} validity</span>`:'';
+
+  return `
+  <div class="course-card enter" onclick="navigate('batch','${c.id}')">
+    <div class="course-card-thumb">
+      <img class="course-card-img" src="${esc(getThumbnail(c))}" alt="${esc(c.title)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${phSvg(300,300,c.title)}'" />
+      <div class="course-card-badges">${leftBadge}${rightBadge}</div>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-title">${esc(c.title)}</div>
+      ${c.short_description?`<div class="course-card-desc">${esc(c.short_description)}</div>`:''}
+      <div class="course-card-meta">${metaLive}${metaRec}${metaVal}</div>
+      <div class="course-card-price">
+        <span class="price-current">₹${c.discountPrice}</span>
+        ${origTag}${discTag}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCoursesGrid(html){ document.getElementById('courses-grid').innerHTML=html; }
+
+function enroll(id){
+  saveEnrolled([...getEnrolled(),id]);
+  const c=allCourses.find(x=>x.id===id);
+  showToast('Enrolled in '+(c?c.title:'batch'),'success');
+  filterCourses(); updateHeroStats();
+}
+function unenroll(id){
+  saveEnrolled(getEnrolled().filter(x=>x!==id));
+  const c=allCourses.find(x=>x.id===id);
+  showToast('Unenrolled from '+(c?c.title:'batch'),'error');
+  filterCourses(); updateHeroStats();
+}
+
+// ══════════════════ BATCH DETAIL ══════════════════
+async function loadBatch(id){
+  if(currentBatchId===id && batchData) return;
+  currentBatchId=id; batchData=null;
+  videoTopicSelected=null; videoSubjectSelected=null; notesTopicSelected=null;
+  batchTopicsCache=null;
+
+  document.getElementById('batch-tabs-nav').style.display='none';
+  document.getElementById('batch-tab-content').style.display='none';
+  document.getElementById('batch-header-title').textContent='';
+  document.getElementById('batch-hero-inner').innerHTML='<div class="loader-center"><div class="spinner"></div></div>';
+  document.getElementById('progress-highlights').innerHTML='';
+
+  try{
+    const res=await fetch(API_COURSES+id);
+    if(!res.ok) throw new Error('Failed to load this batch');
+    const j=await res.json();
+    if(j.state!==200) throw new Error(j.message||'Something went wrong');
+    batchData=j.data;
+    renderBatchHero(batchData,id);
+    renderBatchOverview(batchData);
+    renderTimetableTab(batchData);
+    loadBatchProgressHighlights();
+    document.getElementById('batch-tabs-nav').style.display='flex';
+    document.getElementById('batch-tab-content').style.display='block';
+    switchTab('overview', document.querySelector('#batch-tabs-nav .tab-btn'));
+  }catch(e){
+    document.getElementById('batch-hero-inner').innerHTML=`<div style="text-align:center;padding:44px 0;color:#fff;">
+      <p>${esc(e.message)}</p>
+      <button class="btn btn-outline" style="margin-top:14px;color:#fff;border-color:rgba(255,255,255,.3);" onclick="loadBatch('${id}')">Retry</button>
+    </div>`;
+  }
+}
+
+function renderBatchHero(b,id){
+  const enrolled=getEnrolled().includes(id);
+  const disc=(b.price&&b.price>b.discountPrice)?Math.round((1-b.discountPrice/b.price)*100):0;
+  const heroFallback=phSvg(640,360,b.title);
+  const img=b.banner?safeImgUrl(b.banner):heroFallback;
+
+  document.getElementById('batch-header-title').textContent=b.title;
+  document.getElementById('batch-hero-inner').innerHTML=`
+    <img class="batch-hero-thumb enter" src="${esc(img)}" alt="${esc(b.title)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${heroFallback}'" />
+    <h1 class="batch-hero-title enter">${esc(b.title)}</h1>
+    <div class="batch-hero-price enter">
+      <span class="batch-price-big">₹${b.discountPrice}</span>
+      ${(b.price&&b.price>b.discountPrice)?`<span class="batch-price-orig">₹${b.price}</span>`:''}
+      ${disc>0?`<span class="price-discount" style="color:#7fe0a8;">${disc}% off</span>`:''}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;" class="enter">
+      ${b.isLive?'<span class="badge badge-live" style="background:rgba(255,255,255,.12);color:#fff;"><span class="dot" style="background:#fff;"></span>Live course</span>':''}
+      ${b.isRecorded?'<span class="badge" style="background:rgba(255,255,255,.12);color:#fff;">Recorded</span>':''}
+      ${b.validity?`<span class="badge" style="background:rgba(255,255,255,.12);color:#fff;">${esc(b.validity)} validity</span>`:''}
+      ${enrolled?'<span class="badge badge-green">Enrolled</span>':''}
+    </div>
+    <div style="margin-top:18px;" class="enter">
+      ${enrolled
+        ?`<button class="btn btn-danger" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25);color:#fff;" onclick="unenrollBatch('${id}')">Unenroll</button>`
+        :`<button class="btn btn-amber" onclick="enrollBatch('${id}')">Enroll now</button>`}
+    </div>
+  `;
+}
+
+function enrollBatch(id){ saveEnrolled([...getEnrolled(),id]); renderBatchHero(batchData,id); updateHeroStats(); showToast('Enrolled successfully','success'); }
+function unenrollBatch(id){ saveEnrolled(getEnrolled().filter(x=>x!==id)); renderBatchHero(batchData,id); updateHeroStats(); showToast('Unenrolled','error'); }
+
+// ── Overview tab ──
+function renderBatchOverview(b){
+  let html='<div class="enter">';
+  if(b.description&&b.description.length){
+    html+=`<div class="overview-section"><h3>Course description</h3><ul>${b.description.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>`;
+  }
+  if(b.courseHighlights&&b.courseHighlights.length){
+    html+=`<div class="overview-section"><h3>Highlights</h3><ul>${b.courseHighlights.map(h=>`<li>${esc(h)}</li>`).join('')}</ul></div>`;
+  }
+  if(b.facultyDetails){
+    const f=b.facultyDetails;
+    html+=`<div class="overview-section"><h3>Faculty</h3>
+      <div class="faculty-card">
+        <img class="faculty-img" src="${esc(f.imageUrl?safeImgUrl(f.imageUrl):phSvg(80,80,f.name))}" alt="${esc(f.name||'')}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${phSvg(80,80,f.name)}'" />
+        <div>
+          <div class="faculty-name">${esc(f.name)}</div>
+          <div class="faculty-role">${esc(f.designation||'')}</div>
+          <div class="faculty-exp">${esc(f.experience||'')}${f.reach?' · '+esc(f.reach):''}</div>
+          ${f.bio?`<div class="faculty-bio">${esc(f.bio)}</div>`:''}
+        </div>
+      </div></div>`;
+  }
+  if(b.faqs&&b.faqs.length){
+    html+=`<div class="overview-section"><h3>FAQs</h3>${b.faqs.map(f=>`
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)"><span>${esc(f.question)}</span>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">${esc(f.answer)}</div>
+      </div>`).join('')}</div>`;
+  }
+  if(!(b.description&&b.description.length)&&!(b.courseHighlights&&b.courseHighlights.length)&&!b.facultyDetails&&!(b.faqs&&b.faqs.length)){
+    html+=`<div class="empty-state"><div class="empty-state-icon">📋</div><h3>Nothing here yet</h3><p>Overview details will show up once added.</p></div>`;
+  }
+  html+='</div>';
+  document.getElementById('tab-overview').innerHTML=html;
+}
+function toggleFaq(btn){ btn.classList.toggle('open'); btn.nextElementSibling.classList.toggle('open'); }
+
+// ── Shared topic/class fetch (used by the Videos tab and the Batch Highlights card,
+//    cached per-batch so switching between them never double-fetches) ──
+async function fetchBatchTopics(){
+  if(batchTopicsCache) return batchTopicsCache;
+  const res=await fetch(`${API_COURSES}${currentBatchId}/classes?populate=full`);
+  const j=await res.json();
+  const topics=(j.state===200&&j.data&&j.data.classes)?j.data.classes:[];
+  batchTopicsCache=topics;
+  return topics;
+}
+
+// ── Batch Highlights (Level / Batch Completion / Lectures Done) ──
+function computeBatchProgress(topics){
+  let total=0, done=0;
+  (topics||[]).forEach(t=>{
+    const items=t.classes||[];
+    total+=items.length;
+    done+=items.filter(cls=>isLectureComplete(lectureKey(t.topicName,cls))).length;
+  });
+  const pct=total>0?Math.round((done/total)*100):0;
+  return {done,total,pct};
+}
+function computeLevel(pct){
+  if(pct>=90) return 'Expert';
+  if(pct>=60) return 'Advanced';
+  if(pct>=25) return 'Intermediate';
+  return 'Beginner';
+}
+async function loadBatchProgressHighlights(){
+  renderBatchProgressSkeleton();
+  try{
+    const topics=await fetchBatchTopics();
+    renderBatchProgressCard(topics);
+  }catch(e){
+    const wrap=document.getElementById('progress-highlights');
+    if(wrap) wrap.innerHTML='';
+  }
+}
+function renderBatchProgressSkeleton(){
+  const wrap=document.getElementById('progress-highlights');
+  if(!wrap) return;
+  wrap.innerHTML=`
+    <div class="progress-card enter">
+      <div class="progress-card-header" style="cursor:default;"><span>Batch Highlights</span></div>
+      <div class="progress-card-body">
+        <div class="progress-grid">
+          ${[0,1,2].map(()=>`
+          <div class="progress-item">
+            <div class="ring-badge skeleton-box"></div>
+            <div class="skeleton-box" style="height:9px;width:70%;border-radius:4px;"></div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+function renderBatchProgressCard(topics){
+  const wrap=document.getElementById('progress-highlights');
+  if(!wrap) return;
+  const {done,total,pct}=computeBatchProgress(topics);
+  const level=computeLevel(pct);
+  const r=26, circumference=2*Math.PI*r;
+  const dash=(circumference*pct/100).toFixed(1);
+  const gap=(circumference-dash).toFixed(1);
+  wrap.innerHTML=`
+    <div class="progress-card enter${progressCardCollapsed?' collapsed':''}">
+      <button class="progress-card-header" onclick="toggleProgressCard(this)" aria-expanded="${progressCardCollapsed?'false':'true'}">
+        <span>Batch Highlights</span>
+        <svg class="chev" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>
+      <div class="progress-card-body">
+        <div class="progress-grid">
+          <div class="progress-item">
+            <div class="ring-badge ring-badge-navy">
+              <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5"/></svg>
+              <div class="ring-center"><span class="ring-level-text">${esc(level)}</span></div>
+            </div>
+            <div class="progress-item-label">Level</div>
+          </div>
+          <div class="progress-item">
+            <div class="ring-badge ring-badge-amber">
+              <svg viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5"/>
+                <circle cx="32" cy="32" r="${r}" fill="none" stroke="#ffd27a" stroke-width="5" stroke-linecap="round" stroke-dasharray="${dash} ${gap}" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s var(--ease-out);"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value">${pct}%</span></div>
+            </div>
+            <div class="progress-item-label">Batch Completion</div>
+          </div>
+          <div class="progress-item">
+            <div class="ring-badge ring-badge-brick">
+              <svg viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5"/>
+                <circle cx="32" cy="32" r="${r}" fill="none" stroke="#ffb0a3" stroke-width="5" stroke-linecap="round" stroke-dasharray="${dash} ${gap}" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s var(--ease-out);"/>
+              </svg>
+              <div class="ring-center"><span class="ring-fraction">${done}/${total}</span><span class="ring-unit">videos</span></div>
+            </div>
+            <div class="progress-item-label">Lectures Done</div>
+          </div>
+        </div>
+        <div class="progress-sub">${done} of ${total} lecture${total!==1?'s':''} completed across the batch</div>
+      </div>
+    </div>`;
+}
+function toggleProgressCard(btn){
+  const card=btn.closest('.progress-card');
+  const collapsed=card.classList.toggle('collapsed');
+  progressCardCollapsed=collapsed;
+  btn.setAttribute('aria-expanded', collapsed?'false':'true');
+}
+
+// ── Videos tab ──
+// The API returns one flat list of "topics" per batch with no subject field, so topics from
+// every subject (Math, English, Reasoning...) used to land in one mixed list. Each topic's
+// lectures do carry a teacherName though, and each subject in a batch has its own dedicated
+// teacher — so we use the majority teacherName among a topic's lectures as a stand-in subject
+// and group topics under it. If a batch doesn't have that signal (or only has one subject),
+// we fall back to the old flat list so nothing changes for batches that were never mixed.
+function getTopicSubject(topic){
+  const counts={};
+  (topic.classes||[]).forEach(c=>{
+    const name=(c.teacherName||'').trim();
+    if(!name) return;
+    counts[name]=(counts[name]||0)+1;
+  });
+  let best=null, bestCount=0;
+  Object.keys(counts).forEach(k=>{ if(counts[k]>bestCount){ best=k; bestCount=counts[k]; } });
+  return best;
+}
+function groupTopicsBySubject(topics){
+  const groups=[]; const index={};
+  topics.forEach(t=>{
+    const subj=getTopicSubject(t)||'Other';
+    if(!(subj in index)){ index[subj]=groups.length; groups.push({subject:subj,topics:[]}); }
+    groups[index[subj]].topics.push(t);
+  });
+  groups.sort((a,b)=>(a.subject==='Other')-(b.subject==='Other'));
+  return groups;
+}
+function topicCardsHtml(topicsArr){
+  return topicsArr.map((t,i)=>{
+    const total=(t.classes||[]).length;
+    const done=countTopicCompleted(t);
+    return `
+    <div class="topic-card enter-fast" onclick="selectVideoTopic(${i})">
+      <div class="topic-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#12131c" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+      <div class="topic-info"><div class="topic-name">${esc(t.topicName)}</div><div class="topic-sub">${total} lecture${total!==1?'s':''}${done>0?` · ${done}/${total} completed`:''}</div></div>
+      <div class="btn-icon"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>`;
+  }).join('');
+}
+async function loadVideosTab(){
+  const el=document.getElementById('videos-inner');
+  if(videoTopicSelected){ renderVideoTopic(videoTopicSelected); return; }
+  if(videoSubjectSelected){ renderVideoSubject(videoSubjectSelected); return; }
+  el.innerHTML='<div class="loader-center"><div class="spinner"></div></div>';
+  try{
+    const topics=await fetchBatchTopics();
+    const valid=topics.filter(t=>(t.classes||[]).length>0);
+    if(valid.length===0){ el.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎬</div><h3>No videos yet</h3><p>Lectures will appear here once uploaded.</p></div>'; return; }
+    const groups=groupTopicsBySubject(valid);
+    const namedGroups=groups.filter(g=>g.subject!=='Other');
+    if(namedGroups.length<2){
+      el.innerHTML=topicCardsHtml(valid);
+      el._topics=valid;
+      return;
+    }
+    el.innerHTML=groups.map((g,i)=>{
+      const totalLec=g.topics.reduce((s,t)=>s+(t.classes||[]).length,0);
+      const doneLec=g.topics.reduce((s,t)=>s+countTopicCompleted(t),0);
+      return `
+      <div class="topic-card enter-fast" onclick="selectVideoSubject(${i})">
+        <div class="topic-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#12131c" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="topic-info"><div class="topic-name">${esc(g.subject)}</div><div class="topic-sub">${g.topics.length} topic${g.topics.length!==1?'s':''} · ${totalLec} lecture${totalLec!==1?'s':''}${doneLec>0?` · ${doneLec}/${totalLec} completed`:''}</div></div>
+        <div class="btn-icon"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>`;
+    }).join('');
+    el._groups=groups;
+  }catch(e){ el.innerHTML=`<div class="error-state"><p>${esc(e.message)}</p></div>`; }
+}
+function selectVideoSubject(idx){
+  const el=document.getElementById('videos-inner');
+  videoSubjectSelected=el._groups[idx];
+  renderVideoSubject(videoSubjectSelected);
+}
+function renderVideoSubject(group){
+  const el=document.getElementById('videos-inner');
+  el.innerHTML=`
+    <button class="btn btn-ghost" style="margin-bottom:14px;padding-left:0;" onclick="backToVideoSubjects()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg> Back to subjects
+    </button>
+    <h3 style="font-family:var(--font-display);font-size:1.05rem;font-weight:600;margin-bottom:12px;letter-spacing:-.005em;">${esc(group.subject)}</h3>
+    ${topicCardsHtml(group.topics)}
+  `;
+  el._topics=group.topics;
+}
+function backToVideoSubjects(){ videoSubjectSelected=null; loadVideosTab(); }
+function selectVideoTopic(idx){ const el=document.getElementById('videos-inner'); videoTopicSelected=el._topics[idx]; renderVideoTopic(videoTopicSelected); }
+// ── Folder Highlights (Level / Folder Completion / Lectures Done — same ring
+//    design as the Batch Highlights card above, scoped to one folder/topic) ──
+function folderHighlightsHtml(topicName,done,total,pct){
+  const level=computeLevel(pct);
+  const r=26, circumference=2*Math.PI*r;
+  const dash=(circumference*pct/100).toFixed(1);
+  const gap=(circumference-dash).toFixed(1);
+  return `
+    <div class="progress-card enter" style="margin:0 0 18px;">
+      <div class="progress-card-header" style="cursor:default;"><span>Folder Highlights</span></div>
+      <div class="progress-card-body">
+        <div class="progress-grid">
+          <div class="progress-item">
+            <div class="ring-badge ring-badge-navy">
+              <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5"/></svg>
+              <div class="ring-center"><span class="ring-level-text" id="folder-progress-level">${esc(level)}</span></div>
+            </div>
+            <div class="progress-item-label">Level</div>
+          </div>
+          <div class="progress-item">
+            <div class="ring-badge ring-badge-amber">
+              <svg viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5"/>
+                <circle id="folder-progress-pct-ring" cx="32" cy="32" r="${r}" fill="none" stroke="#ffd27a" stroke-width="5" stroke-linecap="round" stroke-dasharray="${dash} ${gap}" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s var(--ease-out);"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" id="folder-progress-pct">${pct}%</span></div>
+            </div>
+            <div class="progress-item-label">Folder Completion</div>
+          </div>
+          <div class="progress-item">
+            <div class="ring-badge ring-badge-brick">
+              <svg viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5"/>
+                <circle id="folder-progress-lec-ring" cx="32" cy="32" r="${r}" fill="none" stroke="#ffb0a3" stroke-width="5" stroke-linecap="round" stroke-dasharray="${dash} ${gap}" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s var(--ease-out);"/>
+              </svg>
+              <div class="ring-center"><span class="ring-fraction" id="folder-progress-fraction">${done}/${total}</span><span class="ring-unit">videos</span></div>
+            </div>
+            <div class="progress-item-label">Lectures Done</div>
+          </div>
+        </div>
+        <div class="progress-sub" id="folder-progress-sub">${done} of ${total} lecture${total!==1?'s':''} completed in ${esc(topicName)}</div>
+      </div>
+    </div>`;
+}
+function renderVideoTopic(topic){
+  const items=topic.classes||[];
+  const total=items.length;
+  const done=countTopicCompleted(topic);
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('videos-inner').innerHTML=`
+    <button class="btn btn-ghost" style="margin-bottom:14px;padding-left:0;" onclick="backToVideoTopics()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg> Back to topics
+    </button>
+    <h3 style="font-family:var(--font-display);font-size:1.05rem;font-weight:600;margin-bottom:12px;letter-spacing:-.005em;">${esc(topic.topicName)}</h3>
+    ${total>0?folderHighlightsHtml(topic.topicName,done,total,pct):''}
+    ${items.map(cls=>renderClassCard(cls,topic.topicName)).join('')}
+  `;
+}
+function backToVideoTopics(){
+  videoTopicSelected=null;
+  if(videoSubjectSelected){ renderVideoSubject(videoSubjectSelected); }
+  else{ loadVideosTab(); }
+}
+
+function renderClassCard(cls,topicName){
+  const lecKey=lectureKey(topicName,cls);
+  const isDone=isLectureComplete(lecKey);
+  const isLive=cls.isLive&&cls.streamStatus!=='ended';
+  const isUpcoming=cls.startDate&&new Date(cls.startDate)>new Date()&&!isLive;
+  const isCompleted=cls.streamStatus==='ended'||(!isLive&&!isUpcoming);
+  const hasRec=cls.mp4Recordings&&cls.mp4Recordings.length>0;
+  const hasNotes=cls.classPdf&&cls.classPdf.length>0;
+
+  const statusBadge=isLive?'<span class="badge badge-live"><span class="dot"></span>Live</span>'
+    :isUpcoming?'<span class="badge badge-upcoming">Upcoming</span>'
+    :'<span class="badge badge-completed">Completed</span>';
+
+  const dateStr=cls.startDate?`<span class="class-time">
+    <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    ${new Date(cls.startDate).toLocaleDateString()} · ${new Date(cls.startDate).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+  </span>`:'';
+
+  const dlMeta=(quality)=>`{batchId:'${jsStr(currentBatchId||'')}',batchTitle:'${jsStr((batchData&&batchData.title)||'')}',lectureTitle:'${jsStr(cls.title||'')}',quality:'${jsStr(quality||'')}'}`;
+  const pdfMeta=(docTitle)=>`{batchId:'${jsStr(currentBatchId||'')}',batchTitle:'${jsStr((batchData&&batchData.title)||'')}',docTitle:'${jsStr(docTitle||'')}'}`;
+
+  let videoSection='';
+  if(isLive){
+    videoSection=`<button class="btn btn-live" style="width:100%;" onclick="openLink('${esc(cls.class_link||'')}')">Join live</button>`;
+  }else if(isCompleted&&hasRec){
+    const dlBase=safeFilename(cls.title);
+    videoSection=cls.mp4Recordings.length>1
+      ?'<div style="display:flex;flex-wrap:wrap;gap:7px;">'+cls.mp4Recordings.map(r=>`<button class="btn btn-primary btn-sm" onclick="downloadVideo(this,'${esc(r.url)}','${jsStr(dlBase+' - '+r.quality+'.mp4')}',${dlMeta(r.quality)})">${esc(r.quality)}</button>`).join('')+'</div>'
+      :`<button class="btn btn-primary" style="width:100%;" onclick="downloadVideo(this,'${esc(cls.mp4Recordings[0].url)}','${jsStr(dlBase+'.mp4')}',${dlMeta(cls.mp4Recordings[0].quality)})">Download recording</button>`;
+  }else if(isUpcoming){
+    videoSection='<button class="btn btn-disabled" style="width:100%;" disabled>Upcoming</button>';
+  }else{
+    videoSection=`<button class="btn btn-outline" style="width:100%;" onclick="openLink('${esc(cls.class_link||'')}')">Play video</button>`;
+  }
+
+  const notesSection=hasNotes
+    ?cls.classPdf.map(pdf=>`
+      <div class="pdf-row">
+        <div class="pdf-row-info">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="2" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="pdf-row-name">${esc(pdf.name)}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-primary btn-sm" onclick="openLink('${esc(pdf.url)}')">View</button>
+          <button class="btn-icon" style="border:1.5px solid var(--line);" title="Download" onclick="downloadPdf(this,'${esc(pdf.url)}','${jsStr(safeFilename(pdf.name)+'.pdf')}',${pdfMeta(pdf.name)})">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+      </div>`).join('')
+    :'<p style="font-size:.81rem;color:var(--muted);padding:7px 0;">No notes for this lecture.</p>';
+
+  const cardId='card-'+Math.random().toString(36).slice(2);
+  return `
+  <div class="class-card enter-fast ${isDone?'lecture-complete':''}">
+    <div class="class-card-head">
+      <div class="class-icon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#12131c" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div class="class-title">${esc(cls.title)}</div>
+        ${cls.teacherName?`<div class="class-teacher">By ${esc(cls.teacherName)}</div>`:''}
+        ${dateStr}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;">
+        ${statusBadge}
+        <button class="lecture-check ${isDone?'lecture-check-done':''}" aria-label="${isDone?'Mark as not completed':'Mark as completed'}" title="${isDone?'Mark as not completed':'Mark as completed'}" onclick="toggleLectureComplete('${jsStr(lecKey)}',this)">${isDone?'<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</button>
+      </div>
+    </div>
+    <div class="class-card-tabs">
+      <button class="class-tab-btn active" onclick="switchClassTab(this,'${cardId}','video')">Lecture</button>
+      <button class="class-tab-btn" onclick="switchClassTab(this,'${cardId}','notes')" ${!hasNotes?'disabled':''}>Notes${hasNotes?` (${cls.classPdf.length})`:''}</button>
+    </div>
+    <div id="${cardId}-video" class="class-tab-panel active" style="padding:13px 15px 15px;">${videoSection}</div>
+    <div id="${cardId}-notes" class="class-tab-panel">${notesSection}</div>
+  </div>`;
+}
+function switchClassTab(btn,cardId,tab){
+  const card=btn.closest('.class-card');
+  card.querySelectorAll('.class-tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  card.querySelectorAll('.class-tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(cardId+'-'+tab).classList.add('active');
+}
+
+// ── Notes tab ──
+async function loadNotesTab(){
+  const el=document.getElementById('notes-inner');
+  if(notesTopicSelected){ renderNotesTopic(notesTopicSelected); return; }
+  el.innerHTML='<div class="loader-center"><div class="spinner"></div></div>';
+  try{
+    const res=await fetch(`${API_NOTES_HOST}${currentBatchId}/pdfs?groupBy=topic`);
+    const j=await res.json();
+    const topics=(j.state===200&&j.data&&j.data.topics)?j.data.topics.filter(t=>t.pdfs&&t.pdfs.length>0):[];
+    if(topics.length===0){ el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📄</div><h3>No notes yet</h3><p>Study material will appear here once uploaded.</p></div>'; return; }
+    el.innerHTML=topics.map((t,i)=>`
+      <div class="topic-card enter-fast" onclick="selectNotesTopic(${i})">
+        <div class="topic-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="topic-info"><div class="topic-name">${esc(t.topicName)}</div><div class="topic-sub">${t.pdfs.length} note${t.pdfs.length!==1?'s':''}</div></div>
+        <div class="btn-icon"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>`).join('');
+    el._topics=topics;
+  }catch(e){ el.innerHTML=`<div class="error-state"><p>${esc(e.message)}</p></div>`; }
+}
+function selectNotesTopic(idx){ const el=document.getElementById('notes-inner'); notesTopicSelected=el._topics[idx]; renderNotesTopic(notesTopicSelected); }
+function renderNotesTopic(topic){
+  document.getElementById('notes-inner').innerHTML=`
+    <button class="btn btn-ghost" style="margin-bottom:14px;padding-left:0;" onclick="backToNotesTopics()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg> Back to topics
+    </button>
+    <h3 style="font-family:var(--font-display);font-size:1.05rem;font-weight:600;margin-bottom:16px;letter-spacing:-.005em;">${esc(topic.topicName)}</h3>
+    ${topic.pdfs.map(pdf=>`
+      <div class="pdf-row">
+        <div class="pdf-row-info">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="2" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div><div class="pdf-row-name">${esc(pdf.title)}</div>${pdf.teacherName?`<div style="font-size:.71rem;color:var(--muted);">By ${esc(pdf.teacherName)}</div>`:''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-primary btn-sm" onclick="openLink('${esc(pdf.uploadPdf)}')">View</button>
+          <button class="btn-icon" style="border:1.5px solid var(--line);" title="Download" onclick="downloadPdf(this,'${esc(pdf.uploadPdf)}','${jsStr(safeFilename(pdf.title)+'.pdf')}',{batchId:'${jsStr(currentBatchId||'')}',batchTitle:'${jsStr((batchData&&batchData.title)||'')}',docTitle:'${jsStr(pdf.title||'')}'})">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+      </div>`).join('')}
+  `;
+}
+function backToNotesTopics(){ notesTopicSelected=null; loadNotesTab(); }
+
+// ── Timetable & Live tab ──
+async function renderTimetableTab(b){
+  const el=document.getElementById('tab-timetable');
+  const timeTable=b.timeTable||[];
+  el.innerHTML='<div class="loader-center"><div class="spinner"></div></div>';
+
+  let liveHtml='<p style="font-size:.86rem;color:var(--muted);padding:18px 0;text-align:center;">No classes scheduled for today.</p>';
+  try{
+    const res=await fetch(`${API_NOTES_HOST}${currentBatchId}/todays-classes`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({}), cache:'no-store'
+    });
+    if(res.ok){
+      const j=await res.json();
+      const classes=(j&&j.data&&j.data.classes)||[];
+      if(classes.length>0){
+        const order={LIVE:0,Upcoming:1,Completed:2};
+        const sorted=[...classes].sort((a,b2)=>(order[getLiveStatus(a)]??2)-(order[getLiveStatus(b2)]??2));
+        liveHtml=sorted.map(c=>renderLiveClassCard(c)).join('');
+      }
+    }
+  }catch(e){}
+
+  const ttHtml=timeTable.length>0
+    ?timeTable.map(t=>`<div class="tt-row"><span class="tt-topic">${esc(t.topic)}</span><span class="tt-time">${esc(t.time)}</span></div>`).join('')
+    :'<p style="font-size:.86rem;color:var(--muted);padding:18px 0;text-align:center;">Timetable will be updated soon.</p>';
+
+  el.innerHTML=`
+    <div class="overview-section enter"><h3>Today's classes</h3>${liveHtml}</div>
+    <div class="overview-section enter"><h3>Timetable</h3>${ttHtml}</div>`;
+}
+
+function getLiveStatus(cls){
+  if(cls.isLive&&cls.streamStatus!=='ended') return 'LIVE';
+  if(cls.streamStatus==='ended') return 'Completed';
+  const now=new Date(); const start=new Date(cls.startDate);
+  if(cls.startDate&&start>now) return 'Upcoming';
+  return 'Completed';
+}
+function renderLiveClassCard(cls){
+  const status=getLiveStatus(cls);
+  const hasRec=cls.mp4Recordings&&cls.mp4Recordings.length>0;
+  const badge=status==='LIVE'?'<span class="badge badge-live"><span class="dot"></span>Live</span>'
+    :status==='Upcoming'?'<span class="badge badge-upcoming">Upcoming</span>'
+    :'<span class="badge badge-completed">Completed</span>';
+
+  let actionBtn='';
+  if(status==='LIVE'&&cls.class_link){
+    actionBtn=`<a href="${esc(cls.class_link)}" target="_blank" rel="noopener noreferrer" class="btn btn-live" style="width:100%;margin-top:11px;">Join live</a>`;
+  }else if(status==='Completed'&&hasRec){
+    const dlBase=safeFilename(cls.title);
+    const dlMeta=(quality)=>`{batchId:'${jsStr(currentBatchId||'')}',batchTitle:'${jsStr((batchData&&batchData.title)||'')}',lectureTitle:'${jsStr(cls.title||'')}',quality:'${jsStr(quality||'')}'}`;
+    actionBtn=cls.mp4Recordings.length>1
+      ?'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;">'+cls.mp4Recordings.map(r=>`<button class="btn btn-primary btn-sm" onclick="downloadVideo(this,'${esc(r.url)}','${jsStr(dlBase+' - '+r.quality+'.mp4')}',${dlMeta(r.quality)})">${esc(r.quality)}</button>`).join('')+'</div>'
+      :`<button class="btn btn-primary" style="width:100%;margin-top:11px;" onclick="downloadVideo(this,'${esc(cls.mp4Recordings[0].url)}','${jsStr(dlBase+'.mp4')}',${dlMeta(cls.mp4Recordings[0].quality)})">Download recording</button>`;
+  }else if(status==='Upcoming'){
+    actionBtn='<button class="btn btn-disabled" style="width:100%;margin-top:11px;" disabled>Upcoming</button>';
+  }
+  return `
+  <div class="class-card" style="margin-bottom:11px;">
+    <div class="class-card-head">
+      <div class="class-icon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#12131c" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.95C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.95A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.57 2.78 2.78 0 0 0 1.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div class="class-title">${esc(cls.title)}</div>
+        <div class="class-time">${new Date(cls.startDate).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}${cls.endDate?` – ${new Date(cls.endDate).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:''}</div>
+      </div>
+      ${badge}
+    </div>
+    ${actionBtn?`<div style="padding:0 15px 15px;">${actionBtn}</div>`:''}
+  </div>`;
+}
+
+// ── Tab switching ──
+function switchTab(name,clickedBtn){
+  document.querySelectorAll('#batch-tabs-nav .tab-btn').forEach(b=>b.classList.remove('active'));
+  if(clickedBtn) clickedBtn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  const panel=document.getElementById('tab-'+name);
+  if(panel) panel.classList.add('active');
+  if(name==='videos') loadVideosTab();
+  if(name==='notes') loadNotesTab();
+}
+
+// ══════════════════ QUALITY MODAL ══════════════════
+function showQualityPicker(recs){
+  document.getElementById('quality-options').innerHTML=recs.map(r=>`
+    <button class="quality-btn" onclick="pickQuality('${esc(r.url)}')">
+      <span>${esc(r.quality)}</span><span class="quality-size">${r.size.toFixed(0)} MB</span>
+    </button>`).join('');
+  document.getElementById('quality-modal').classList.add('open');
+}
+function pickQuality(url){ closeQualityModal(); downloadVideo(null,url); }
+function closeQualityModal(e){
+  if(e&&e.target!==document.getElementById('quality-modal')) return;
+  document.getElementById('quality-modal').classList.remove('open');
+}
+
+// ── Toast ──
+function showToast(msg,type='success'){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t); }
+  t.textContent=msg;
+  t.style.background=type==='success'?'#2f9e5c':'#dc4c3e';
+  clearTimeout(t._timer);
+  t.classList.add('show');
+  t._timer=setTimeout(()=>{ t.classList.remove('show'); },2600);
+}
+
+// ══════════════════ THEME ENGINE ══════════════════
+const SW_THEME_KEY='swTheme';
+let currentThemeId='light';
+
+// Maps a theme's short variable keys onto the actual CSS custom-property names.
+const THEME_VAR_MAP={
+  ink:'--ink', ink2:'--ink-2', navy:'--navy', navy2:'--navy-2', inkSoft:'--ink-soft',
+  paper:'--paper', paperCard:'--paper-card', line:'--line', lineSoft:'--line-soft',
+  amber:'--amber', amberDeep:'--amber-deep', amberGlow:'--amber-glow',
+  brick:'--brick', brickSoft:'--brick-soft', green:'--green', greenSoft:'--green-soft',
+  muted:'--muted', surface:'--surface', topbarBg:'--topbar-bg',
+  skeletonHi:'--skeleton-hi', lineHover:'--line-hover'
+};
+
+const THEMES=[
+  { id:'light', name:'Light Mode', icon:'☀️', swatch:'linear-gradient(155deg,#ffcf86,#d4841f)', vars:{
+    ink:'#12131c', ink2:'#1c1e2b', navy:'#132a4d', navy2:'#1d3b66', inkSoft:'#5a5d78',
+    paper:'#faf8f3', paperCard:'#ffffff', line:'#eae6da', lineSoft:'#f1eee5',
+    amber:'#d4841f', amberDeep:'#a8630f', amberGlow:'rgba(212,132,31,.16)',
+    brick:'#dc4c3e', brickSoft:'rgba(220,76,62,.1)', green:'#2f9e5c', greenSoft:'rgba(47,158,92,.1)',
+    muted:'#8b8878', surface:'#ffffff', topbarBg:'rgba(250,248,243,.82)', skeletonHi:'#f4f1e8', lineHover:'#ddd5c0'
+  }},
+  { id:'dark', name:'Dark Mode', icon:'🌙', swatch:'linear-gradient(155deg,#5b6f9e,#1d2b45)', vars:{
+    ink:'#f1f0ec', ink2:'#e4e2da', navy:'#2c4a7c', navy2:'#3a5f9e', inkSoft:'#b8bac6',
+    paper:'#0f1117', paperCard:'#1a1c24', line:'#2a2d38', lineSoft:'#242730',
+    amber:'#e0a94a', amberDeep:'#c98f2e', amberGlow:'rgba(224,169,74,.18)',
+    brick:'#e2584a', brickSoft:'rgba(226,88,74,.14)', green:'#3fb873', greenSoft:'rgba(63,184,115,.14)',
+    muted:'#8a8d9c', surface:'#232630', topbarBg:'rgba(15,17,23,.82)', skeletonHi:'#2e313c', lineHover:'#3a3d4a'
+  }},
+  { id:'sandalwood', name:'Sandalwood', icon:'🌲', swatch:'linear-gradient(155deg,#c98a4b,#6b4423)', vars:{
+    ink:'#2b1d12', ink2:'#3a2818', navy:'#4a2f18', navy2:'#6b4423', inkSoft:'#7a6248',
+    paper:'#f7ede0', paperCard:'#fffaf3', line:'#e8d5bd', lineSoft:'#f0e2cd',
+    amber:'#b5651d', amberDeep:'#8a4a12', amberGlow:'rgba(181,101,29,.16)',
+    brick:'#c1440e', brickSoft:'rgba(193,68,14,.1)', green:'#5c7a3d', greenSoft:'rgba(92,122,61,.1)',
+    muted:'#a08b6f', surface:'#fffaf3', topbarBg:'rgba(247,237,224,.85)', skeletonHi:'#f0e0c8', lineHover:'#d9c2a0'
+  }},
+  { id:'forest', name:'Forest Emerald', icon:'🍃', swatch:'linear-gradient(155deg,#2f9e5c,#0f3d2e)', vars:{
+    ink:'#0e2019', ink2:'#173328', navy:'#0f3d2e', navy2:'#155a43', inkSoft:'#4c6459',
+    paper:'#f0f7f2', paperCard:'#ffffff', line:'#d9e8de', lineSoft:'#e7f1eb',
+    amber:'#c98a1f', amberDeep:'#9c6b16', amberGlow:'rgba(201,138,31,.14)',
+    brick:'#c0392b', brickSoft:'rgba(192,57,43,.1)', green:'#1f8a52', greenSoft:'rgba(31,138,82,.12)',
+    muted:'#6f8579', surface:'#ffffff', topbarBg:'rgba(240,247,242,.85)', skeletonHi:'#e3efe7', lineHover:'#c3dccb'
+  }},
+  { id:'ocean', name:'Ocean Deep', icon:'🌊', swatch:'linear-gradient(155deg,#2f8fc9,#0d3b5c)', vars:{
+    ink:'#0b1f2e', ink2:'#123044', navy:'#0d3b5c', navy2:'#155a86', inkSoft:'#4d6b80',
+    paper:'#eef6fa', paperCard:'#ffffff', line:'#d7e8f0', lineSoft:'#e6f1f6',
+    amber:'#d99a2b', amberDeep:'#ab7616', amberGlow:'rgba(217,154,43,.14)',
+    brick:'#d1483a', brickSoft:'rgba(209,72,58,.1)', green:'#1f9e78', greenSoft:'rgba(31,158,120,.1)',
+    muted:'#6f8b9c', surface:'#ffffff', topbarBg:'rgba(238,246,250,.85)', skeletonHi:'#dcedf3', lineHover:'#b9d8e6'
+  }},
+  { id:'sakura', name:'Sakura Blossom', icon:'🌸', swatch:'linear-gradient(155deg,#f2a8c0,#9c3d61)', vars:{
+    ink:'#2b1620', ink2:'#3d1f2c', navy:'#7a2d4a', navy2:'#9c3d61', inkSoft:'#8a6270',
+    paper:'#fff3f6', paperCard:'#ffffff', line:'#f5d9e2', lineSoft:'#fae7ed',
+    amber:'#e0708f', amberDeep:'#c14f70', amberGlow:'rgba(224,112,143,.14)',
+    brick:'#d9483f', brickSoft:'rgba(217,72,63,.1)', green:'#4fa87a', greenSoft:'rgba(79,168,122,.1)',
+    muted:'#a883a0', surface:'#ffffff', topbarBg:'rgba(255,243,246,.85)', skeletonHi:'#fbe4ea', lineHover:'#f0c2d2'
+  }},
+  { id:'dracula', name:'Dracula Midnight', icon:'👻', swatch:'linear-gradient(155deg,#c792ea,#2a2440)', vars:{
+    ink:'#f5f3f7', ink2:'#e6e1ee', navy:'#3a2a5c', navy2:'#4f3878', inkSoft:'#b9aecb',
+    paper:'#1e1a2b', paperCard:'#2a2440', line:'#3d3660', lineSoft:'#332c4f',
+    amber:'#c792ea', amberDeep:'#a06bd6', amberGlow:'rgba(199,146,234,.18)',
+    brick:'#ff5f87', brickSoft:'rgba(255,95,135,.14)', green:'#5af78e', greenSoft:'rgba(90,247,142,.12)',
+    muted:'#8c85a3', surface:'#332c4f', topbarBg:'rgba(30,26,43,.82)', skeletonHi:'#3d3660', lineHover:'#4f4570'
+  }},
+  { id:'lavender', name:'Lavender Mist', icon:'✨', swatch:'linear-gradient(155deg,#c3aef0,#7566ab)', vars:{
+    ink:'#2c2438', ink2:'#3a3049', navy:'#5b4b8a', navy2:'#7566ab', inkSoft:'#79708f',
+    paper:'#f6f2fb', paperCard:'#ffffff', line:'#e3dbf2', lineSoft:'#eee8f7',
+    amber:'#9b7ede', amberDeep:'#7c5cc2', amberGlow:'rgba(155,126,222,.14)',
+    brick:'#d1607a', brickSoft:'rgba(209,96,122,.1)', green:'#5fa88a', greenSoft:'rgba(95,168,138,.1)',
+    muted:'#9c93b0', surface:'#ffffff', topbarBg:'rgba(246,242,251,.85)', skeletonHi:'#ece4f7', lineHover:'#d4c5ec'
+  }},
+  { id:'cyberpunk', name:'Cyberpunk Neon', icon:'⚡', swatch:'linear-gradient(155deg,#ff2fb0,#1a0e2e)', vars:{
+    ink:'#eafcff', ink2:'#d0f7ff', navy:'#1a0e2e', navy2:'#2c1650', inkSoft:'#8fb8c9',
+    paper:'#0a0a12', paperCard:'#14121f', line:'#2b2440', lineSoft:'#201c33',
+    amber:'#ff2fb0', amberDeep:'#d1128f', amberGlow:'rgba(255,47,176,.2)',
+    brick:'#ff3860', brickSoft:'rgba(255,56,96,.15)', green:'#00f0c0', greenSoft:'rgba(0,240,192,.14)',
+    muted:'#6f7a9e', surface:'#1b1830', topbarBg:'rgba(10,10,18,.85)', skeletonHi:'#231f3d', lineHover:'#3c3560'
+  }},
+  { id:'system', name:'System Default', icon:'◐', swatch:'linear-gradient(155deg,#cfd3da,#4a4f5c)', vars:null },
+  { id:'spiderman', name:'Spider-Man', icon:'🕷️', swatch:'linear-gradient(155deg,#e0212f,#13214a)', vars:{
+    ink:'#eef2fb', ink2:'#dbe3f6', navy:'#13214a', navy2:'#1c3170', inkSoft:'#9fb0d0',
+    paper:'#0b1220', paperCard:'#121b30', line:'#22304f', lineSoft:'#1c2740',
+    amber:'#e0212f', amberDeep:'#b3101d', amberGlow:'rgba(224,33,47,.2)',
+    brick:'#e0212f', brickSoft:'rgba(224,33,47,.14)', green:'#2fbf71', greenSoft:'rgba(47,191,113,.12)',
+    muted:'#6f7fa0', surface:'#182544', topbarBg:'rgba(11,18,32,.85)', skeletonHi:'#1c2843', lineHover:'#2c3c66'
+  }},
+  { id:'thor', name:'Thor', icon:'🔨', swatch:'linear-gradient(155deg,#f2c14e,#1c2735)', vars:{
+    ink:'#eef1f5', ink2:'#dde2ea', navy:'#1c2735', navy2:'#2d3f57', inkSoft:'#a3adbd',
+    paper:'#0c1016', paperCard:'#171d27', line:'#2a3140', lineSoft:'#212733',
+    amber:'#f2c14e', amberDeep:'#c99a2c', amberGlow:'rgba(242,193,78,.2)',
+    brick:'#d1483a', brickSoft:'rgba(209,72,58,.14)', green:'#3fae7a', greenSoft:'rgba(63,174,122,.12)',
+    muted:'#7c8698', surface:'#1d2430', topbarBg:'rgba(12,16,22,.85)', skeletonHi:'#232a37', lineHover:'#38424f'
+  }},
+  { id:'eren', name:'Eren · Wings of Freedom', icon:'🪽', swatch:'linear-gradient(155deg,#9c2b2b,#3c3a24)', vars:{
+    ink:'#231f18', ink2:'#332e22', navy:'#3c3a24', navy2:'#57532f', inkSoft:'#5c5646',
+    paper:'#f4f1e6', paperCard:'#fbf9f1', line:'#ddd5bd', lineSoft:'#eae4d2',
+    amber:'#9c2b2b', amberDeep:'#7a1f1f', amberGlow:'rgba(156,43,43,.14)',
+    brick:'#9c2b2b', brickSoft:'rgba(156,43,43,.1)', green:'#5c7a3d', greenSoft:'rgba(92,122,61,.1)',
+    muted:'#8c8570', surface:'#fbf9f1', topbarBg:'rgba(244,241,230,.85)', skeletonHi:'#ece5cf', lineHover:'#cfc4a0'
+  }},
+  { id:'batman', name:'Batman', icon:'🦇', swatch:'linear-gradient(155deg,#f0c419,#141518)', vars:{
+    ink:'#eef0f2', ink2:'#dcdfe3', navy:'#141518', navy2:'#202226', inkSoft:'#98a0ab',
+    paper:'#08090c', paperCard:'#131417', line:'#25272c', lineSoft:'#1c1e22',
+    amber:'#f0c419', amberDeep:'#c9a112', amberGlow:'rgba(240,196,25,.18)',
+    brick:'#d1483a', brickSoft:'rgba(209,72,58,.14)', green:'#3fae7a', greenSoft:'rgba(63,174,122,.12)',
+    muted:'#6a7178', surface:'#1a1c20', topbarBg:'rgba(8,9,12,.88)', skeletonHi:'#202226', lineHover:'#34373d'
+  }}
+];
+
+function getThemeById(id){ return THEMES.find(t=>t.id===id)||THEMES[0]; }
+function resolveSystemThemeId(){
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+function applyThemeVars(vars){
+  const root=document.documentElement.style;
+  Object.keys(vars).forEach(k=>{ const cssVar=THEME_VAR_MAP[k]; if(cssVar) root.setProperty(cssVar,vars[k]); });
+}
+function applyTheme(id,persist=true){
+  currentThemeId=id;
+  const effective=id==='system'?resolveSystemThemeId():id;
+  applyThemeVars(getThemeById(effective).vars);
+  document.documentElement.setAttribute('data-theme',id);
+  document.documentElement.setAttribute('data-theme-effective',effective);
+  if(persist){ try{ localStorage.setItem(SW_THEME_KEY,id); }catch(e){} }
+  renderThemeModalActiveState();
+}
+function initTheme(){
+  let saved=null;
+  try{ saved=localStorage.getItem(SW_THEME_KEY); }catch(e){}
+  const valid=saved && (saved==='system' || THEMES.some(t=>t.id===saved));
+  applyTheme(valid?saved:'light',false);
+  if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
+      if(currentThemeId==='system') applyTheme('system',false);
+    });
+  }
+}
+function renderThemeGrid(){
+  const grid=document.getElementById('theme-grid');
+  if(!grid) return;
+  grid.innerHTML=THEMES.map(t=>`
+    <button class="theme-opt${currentThemeId===t.id?' active':''}" data-theme-id="${t.id}" onclick="applyTheme('${t.id}')">
+      <span class="theme-opt-check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+      <div class="theme-opt-icon" style="background:${t.swatch};">${t.icon}</div>
+      <div class="theme-opt-name">${esc(t.name)}</div>
+    </button>`).join('');
+}
+function renderThemeModalActiveState(){
+  document.querySelectorAll('.theme-opt').forEach(el=>{
+    el.classList.toggle('active', el.getAttribute('data-theme-id')===currentThemeId);
+  });
+}
+function openThemeModal(){ renderThemeGrid(); document.getElementById('theme-modal').classList.add('open'); }
+function closeThemeModal(e){
+  if(e&&e.target!==document.getElementById('theme-modal')) return;
+  document.getElementById('theme-modal').classList.remove('open');
+}
+initTheme();
+</script>
+</body>
+</html>
